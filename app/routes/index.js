@@ -34,12 +34,12 @@ module.exports = function (app, passport) {
 
 	app.route('/')
 		.get(function (req, res) {			
-			res.sendFile(path + '/public/main.html');
+			res.sendFile(path + '/public/index.html');
 		});
 
 	app.route('/index')
 		.get(function (req, res) {
-			res.sendFile(path + '/public/main.html');
+			res.sendFile(path + '/public/index.html');
 		});
 
 	app.route('/login')
@@ -72,13 +72,14 @@ module.exports = function (app, passport) {
 	app.route('/auth/facebook/callback')
 		.get(passport.authenticate('facebook', {
 			successRedirect: '/',
-			failureRedirect: '/login',
-			failureFlash: true
+			failureRedirect: '/login'
+			// ,failureFlash: true
 		}));
 
 	app.route('/auth/check')
 		.get(isAuthed, function (req, res) {
-			res.json({ authStatus: 1, zipStore: req.session.lastZip });
+			// res.json({ authStatus: 1, zipStore: req.session.lastZip });
+			res.json({ authStatus: 1});
 		});
 	/*********************************************/
 	var barsHandler = new BarsHandler();

@@ -25,11 +25,13 @@ var AUTHLIB = AUTHLIB || (function () {
 			authScriptCB = _args[2] || null;
 			// some other initialising
 			loader = this.loadLock;
+			loader(false);
 		},
-		navi: function () { 
-		//navigation icon+header
-			var homeIcon = document.getElementById('home-icon') || null;
 
+		navi: function () {
+			//navigation icon+header
+			var homeIcon = document.getElementById('home-icon') || null;
+			/**home-icon replacer */
 			function makeNaviDiv() {
 				var aIcon = document.createElement("a");
 				aIcon.href = "/";
@@ -39,13 +41,12 @@ var AUTHLIB = AUTHLIB || (function () {
 				aIcon.appendChild(imgIcon);
 				return aIcon;
 			}
-
 			if (homeIcon !== null) {
-				homeIcon.replaceWith(makeNaviDiv());
+				//TODO choose to use home icon
+				// homeIcon.replaceWith(makeNaviDiv());
 			}
-
 			var apiIcon = document.getElementById('api-icon') || null;
-
+			/** api-icon replacer*/
 			function makeAPIDiv() {
 				var aIcon = document.createElement("a");
 				aIcon.href = "https://www.yelp.com";
@@ -55,11 +56,12 @@ var AUTHLIB = AUTHLIB || (function () {
 				aIcon.appendChild(imgIcon);
 				return aIcon;
 			}
-
 			if (apiIcon !== null) {
-				apiIcon.replaceWith(makeAPIDiv());
+				//TODO choose ot use api icon
+				// apiIcon.replaceWith(makeAPIDiv());
 			}
 
+			/**clock maker */
 			var clock = document.getElementById('clock-time') || null;
 			function makeClock() {
 				let cWrap = document.createElement("div");
@@ -111,8 +113,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				cWrap.appendChild(dateStr);
 				return (cWrap.innerHTML);
 			}
-
-			if (apiIcon !== null) {
+			if (clock !== null) {
 				clock.innerHTML = makeClock();
 				var intervalID = window.setInterval(myCallback, 1000);
 				function myCallback() {
@@ -120,6 +121,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				}
 			}
 
+			/**listener for refresher */	
 			let refresher = document.querySelector('#fresh-appts');
 			if (refresher !== null) {
 				refresher.addEventListener('click', () => {
@@ -138,111 +140,10 @@ var AUTHLIB = AUTHLIB || (function () {
 			}//refresher if
 
 		},
+		
+		authScript: function (zipIt) {
 
-		fbControl: function (cb) {
-			window.fbAsyncInit = function () { };
-			// Load the SDK asynchronously
-			(function (d, s, id) {
-				var js, fjs = d.getElementsByTagName(s)[0];
-				if (d.getElementById(id)) return;
-				js = d.createElement(s); js.id = id;
-				js.src = "https://connect.facebook.net/en_US/sdk.js";
-				fjs.parentNode.insertBefore(js, fjs);
-			}(document, 'script', 'facebook-jssdk'));
-
-		},
-
-		chooser: function (passedInFn) {
-			var cButtons = document.querySelectorAll(".poll-wrap-sup") || null;
-			for (var cButton of cButtons) {
-				if (cButton.className !== "poll-wrap-sup appt-wrap-sup") {
-					//add a new choice to an existing poll					
-					cButton.addEventListener('click', clickHandle.bind(cButton), false);//click listener					
-				}//classname check
-			}//loop
-
-			/*			Search Result bar clicks (add and remove)			*/
-			function clickHandle() {
-				//lockpic on
-				loader(true);
-				var tDay = new Date();
-				// tDay.setHours(21); //for testing
-				var toDate = new Date(tDay.getFullYear(), tDay.getMonth(), tDay.getDate())
-				if (tDay.getHours() >= 20) {
-					toDate.setDate(toDate.getDate() + 1);
-					// toDate.setDate(toDate.getDate() - 1); //for testing
-					// console.log('if passed');
-				}
-				var keyName = this.querySelector('.poll-view-list-poll');			
-				let that = this;
-				that.querySelector(".show-text").innerHTML = "please hold...";
-				//if "app key" check
-				if (!that.hasAttribute("appt-key")) {
-					//post server for 'this' bar and 'today'					
-					ajaxFunctions.ajaxRequestLim('POST', '/bars/db?date=' + toDate.toISOString() + "&" + "bid=" + keyName.getAttribute("poll-key"), 10000,
-						function (err, response, status) {
-							let respJSON = JSON.parse(response);
-							if (status == 403) {
-								//lockpic off
-								loader(false);
-								that.querySelector(".show-text").innerHTML = "Sign in to book...";
-								alert("please sign in ...");
-								that.removeEventListener('click', clickHandle);
-								return;
-							}
-							else if (respJSON == null) {
-								//lockpic off
-								loader(false);
-								that.querySelector(".show-text").innerHTML = "click to book...";
-								alert("please wait...");
-								that.removeEventListener('click', clickHandle);
-								return;
-							}
-							else {
-								that.setAttribute("style", "border-color: #ebc074; background-color: #f5deb7");
-								that.querySelector(".show-text").innerHTML = "booked!";
-								that.querySelector(".show-text").setAttribute("style", "color: #f15c00");
-								//if keys match
-								if (keyName.getAttribute("poll-key") == respJSON["appt"]["yelpid"]) {
-									//append the new "appt-key" to this bar div
-									that.setAttribute("appt-key", respJSON["appt"]["_id"]);
-								}
-							}
-							//lockpic on
-							loader(true);
-							//execute AUTHLIB.authScript(false) as a cb
-							authScriptCB(false);
-						});//ajax
-				} else {
-					//click action to "unbook" this bar
-					//lockpic off
-					loader(false);
-					deleteCB(that);
-				}//else
-
-				function deleteCB(arg) {
-					var keyS = arg.getAttribute("appt-key");
-					var titleS = arg.title;
-					arg.setAttribute("style", "border-color: unset; background-color: unset");
-					let zat = arg;
-					ajaxFunctions.ajaxRequest('DELETE', '/bars/db?appt=' + keyS, false, function (response2) {
-
-						let pareOut = document.querySelector("#appts-view");
-						pareOut.removeChild(pareOut.querySelector('[appt-key=\"' + keyS + '\"').parentNode.parentNode.parentNode);
-
-						zat.querySelector(".show-text").innerHTML = "click to book...";
-						zat.querySelector(".show-text").setAttribute("style", "");
-						zat.removeAttribute("appt-key");
-						//execute AUTHLIB.authScript(false) as a cb
-						authScriptCB(false);
-					});
-					//					 }
-				}//deleteCB function			
-			}// clickHandle function
-		},//chooser
-
-		authScript: function (zipIt) {		
-
+			/**profile logout div */
 			function makeDiv() {
 				var newSpan2 = document.createElement("div");
 				newSpan2.id = "login-nav";
@@ -260,7 +161,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				newSpan2.appendChild(aLog1);
 				return newSpan2;
 			}
-
+			/**login sign-in div */
 			function makeDefaultDiv() {
 				var newSpan = document.createElement("div");
 				newSpan.id = "login-nav";
@@ -289,32 +190,33 @@ var AUTHLIB = AUTHLIB || (function () {
 				return resetSpan;
 			}
 
-			ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', apiAuth, false, function (data) {
+			/**ask node.js if user is authenticated */
+			ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', apiAuth, 8000, function (err, data, status) {
 				//reset navi for new auth call
 				let resetAttempt = document.querySelector("#login-nav");
-
 				if (resetAttempt !== null) {
 					resetAttempt.replaceWith(resetNavi());
-				}
-
+				}		
 				var authObj = JSON.parse(data);
+				if(authObj == null){ console.log("auth check null "); return;}
+
 				var authNode = document.getElementById('auth-container');
 				var reg = new RegExp('^(\\d\\d\\d\\d\\d)$');
-				if (reg.test(authObj.zipStore) && zipIt) { 
+				if (reg.test(authObj.zipStore) && zipIt) {
 					//zipIt prevents search when authScript called elsewhere
 					var keyup = new Event('keyup');
 					document.querySelector('#zipSearch').value = authObj.zipStore;
 					document.querySelector('input#zipSearch').dispatchEvent(keyup);
 				}
 
-				if (authObj.authStatus == true) {
+				if (authObj.authStatus == 1) {
 					authNode.replaceWith(makeDiv()); //login header placement
 					if (document.querySelector("#appts-img") == null) {
 						document.querySelector("#profile-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
 					}
 					apptFind();
 				}
-				else if (authObj.authStatus == false) {
+				else if (authObj.authStatus == 0) {
 					//remove appts div "profile-container" because "not authed"
 					document.querySelector('#profile-container').remove();
 					if (authNode !== null) {
@@ -328,6 +230,9 @@ var AUTHLIB = AUTHLIB || (function () {
 				}//authObj.authStatus false, else
 			}));
 
+			/**			 
+			 * @param {String} addText 
+			 */
 			function makeAppts(addText) {
 				var newSpanTxt = document.createElement("img");
 				//				newSpanTxt.className = "alternate";
@@ -429,10 +334,10 @@ var AUTHLIB = AUTHLIB || (function () {
 								var titleS = this.title;
 								var confirmDel = confirm("Expire your appointment: " + titleS + "?");
 								let that = this;
-								if (confirmDel == true) {									
+								if (confirmDel == true) {
 									ajaxFunctions.ajaxRequestLim('DELETE', '/bars/db?appt=' + keyS, 5000, function (err, response, status) {
 										if (err) { console.log("request error \'delete\'"); }
-										else {											
+										else {
 											let nodeToRemove = that.parentNode.parentNode;
 											if (nodeToRemove.className == "poll-wrap-sup appt-wrap-sup") {
 												let nPare = nodeToRemove.parentNode;
@@ -457,6 +362,108 @@ var AUTHLIB = AUTHLIB || (function () {
 			}//apptFind()
 		},
 
+		fbControl: function (cb) {
+			window.fbAsyncInit = function () { };
+			// Load the SDK asynchronously
+			(function (d, s, id) {
+				var js, fjs = d.getElementsByTagName(s)[0];
+				if (d.getElementById(id)) return;
+				js = d.createElement(s); js.id = id;
+				js.src = "https://connect.facebook.net/en_US/sdk.js";
+				fjs.parentNode.insertBefore(js, fjs);
+			}(document, 'script', 'facebook-jssdk'));
+
+		},
+
+		chooser: function (passedInFn) {
+			var cButtons = document.querySelectorAll(".poll-wrap-sup") || null;
+			for (var cButton of cButtons) {
+				if (cButton.className !== "poll-wrap-sup appt-wrap-sup") {
+					//add a new choice to an existing poll					
+					cButton.addEventListener('click', clickHandle.bind(cButton), false);//click listener					
+				}//classname check
+			}//loop
+
+			/*			Search Result bar clicks (add and remove)			*/
+			function clickHandle() {
+				//lockpic on
+				loader(true);
+				var tDay = new Date();
+				// tDay.setHours(21); //for testing
+				var toDate = new Date(tDay.getFullYear(), tDay.getMonth(), tDay.getDate())
+				if (tDay.getHours() >= 20) {
+					toDate.setDate(toDate.getDate() + 1);
+					// toDate.setDate(toDate.getDate() - 1); //for testing
+					// console.log('if passed');
+				}
+				var keyName = this.querySelector('.poll-view-list-poll');
+				let that = this;
+				that.querySelector(".show-text").innerHTML = "please hold...";
+				//if "app key" check
+				if (!that.hasAttribute("appt-key")) {
+					//post server for 'this' bar and 'today'					
+					ajaxFunctions.ajaxRequestLim('POST', '/bars/db?date=' + toDate.toISOString() + "&" + "bid=" + keyName.getAttribute("poll-key"), 10000,
+						function (err, response, status) {
+							let respJSON = JSON.parse(response);
+							if (status == 403) {
+								//lockpic off
+								loader(false);
+								that.querySelector(".show-text").innerHTML = "Sign in to book...";
+								alert("please sign in ...");
+								that.removeEventListener('click', clickHandle);
+								return;
+							}
+							else if (respJSON == null) {
+								//lockpic off
+								loader(false);
+								that.querySelector(".show-text").innerHTML = "click to book...";
+								alert("please wait...");
+								that.removeEventListener('click', clickHandle);
+								return;
+							}
+							else {
+								that.setAttribute("style", "border-color: #ebc074; background-color: #f5deb7");
+								that.querySelector(".show-text").innerHTML = "booked!";
+								that.querySelector(".show-text").setAttribute("style", "color: #f15c00");
+								//if keys match
+								if (keyName.getAttribute("poll-key") == respJSON["appt"]["yelpid"]) {
+									//append the new "appt-key" to this bar div
+									that.setAttribute("appt-key", respJSON["appt"]["_id"]);
+								}
+							}
+							//lockpic on
+							loader(true);
+							//execute AUTHLIB.authScript(false) as a cb
+							authScriptCB(false);
+						});//ajax
+				} else {
+					//click action to "unbook" this bar
+					//lockpic off
+					loader(false);
+					deleteCB(that);
+				}//else
+
+				function deleteCB(arg) {
+					var keyS = arg.getAttribute("appt-key");
+					var titleS = arg.title;
+					arg.setAttribute("style", "border-color: unset; background-color: unset");
+					let zat = arg;
+					ajaxFunctions.ajaxRequest('DELETE', '/bars/db?appt=' + keyS, false, function (response2) {
+
+						let pareOut = document.querySelector("#appts-view");
+						pareOut.removeChild(pareOut.querySelector('[appt-key=\"' + keyS + '\"').parentNode.parentNode.parentNode);
+
+						zat.querySelector(".show-text").innerHTML = "click to book...";
+						zat.querySelector(".show-text").setAttribute("style", "");
+						zat.removeAttribute("appt-key");
+						//execute AUTHLIB.authScript(false) as a cb
+						authScriptCB(false);
+					});
+					//					 }
+				}//deleteCB function			
+			}// clickHandle function
+		},//chooser
+
 		loadExtScript: function () {
 			return new Promise(function (resolve, reject) {
 				var s;
@@ -467,7 +474,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				document.head.appendChild(s);
 			});
 		},
-		
+
 		loadLock: function loadLock(boo) {
 			let lockPic = document.querySelector('#loading');
 			if (boo === true) {
