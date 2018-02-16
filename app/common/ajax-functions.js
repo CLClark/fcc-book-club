@@ -2,8 +2,8 @@
 
 var appUrl = window.location.origin;
 var ajaxFunctions = {
-	
-	ready: function ready (fn) {
+
+	ready: function ready(fn) {
 		if (typeof fn !== 'function') {
 			return;
 		}
@@ -11,11 +11,11 @@ var ajaxFunctions = {
 			return fn();
 		}
 		document.addEventListener('DOMContentLoaded', fn, false);
-	},	
+	},
 
-	ajaxRequest: function ajaxRequest (method, url, timeout, callback) {
+	ajaxRequest: function ajaxRequest(method, url, timeout, callback) {
 		var xmlhttp = new XMLHttpRequest();
-		
+
 		xmlhttp.timeout = timeout;
 		xmlhttp.ontimeout = function () {
 			let err = "timeout";
@@ -23,55 +23,55 @@ var ajaxFunctions = {
 			//remove global statusifier
 			removeIt(xhrTrack);
 			console.error("The request for " + url + " timed out.");
-		};		
-		
-		function removeIt(childN){
-// console.log(document.getElementById("xhr-track"));
+		};
+
+		function removeIt(childN) {
+			// console.log(document.getElementById("xhr-track"));
 			document.documentElement.removeChild(childN);
-// console.log(document.getElementById("xhr-track"));
+			// console.log(document.getElementById("xhr-track"));
 		}
-		function checkIt(str){
-			if(document.querySelector(str) !== null){
-// console.log("node present");	
+		function checkIt(str) {
+			if (document.querySelector(str) !== null) {
+				// console.log("node present");	
 				return true;
-			}else{				
-// console.log("node absent");	
+			} else {
+				// console.log("node absent");	
 				return false;
 			}
 		}
-		if(checkIt("#xhr-track")){
+		if (checkIt("#xhr-track")) {
 			callback("request aborted: please wait for response", null);
 			xmlhttp.abort();
 		}
-		if(!checkIt("#xhr-track")){
+		if (!checkIt("#xhr-track")) {
 			//global statusifier
 			var xhrTrack = document.createElement("data");
-			xhrTrack.id	 = "xhr-track";
+			xhrTrack.id = "xhr-track";
 			xhrTrack.value = url;
 			document.documentElement.appendChild(xhrTrack);
 
-			xmlhttp.onreadystatechange = function () {				
+			xmlhttp.onreadystatechange = function () {
 				if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
 					callback(null, xmlhttp.response, xmlhttp.status);
 					//remove global statusifier
-					removeIt(xhrTrack);				
+					removeIt(xhrTrack);
 				}
-				else if(xmlhttp.readyState === 4 && xmlhttp.status === 403){
+				else if (xmlhttp.readyState === 4 && xmlhttp.status === 403) {
 					//error callback
 					callback(null, xmlhttp.response, xmlhttp.status);
 					//remove global statusifier
-					removeIt(xhrTrack);				
+					removeIt(xhrTrack);
 				}
 			};
 			xmlhttp.open(method, url);
 			xmlhttp.send();
 		}
-		else{
+		else {
 			callback("error: request out", null);
 		}
-	},
+	},	
 
-	ajaxRequestSimple: function ajaxRequest (method, url, syncBool, callback) {
+	ajaxRequestSimple: function ajaxRequest(method, url, syncBool, callback) {
 		var xmlhttp = new XMLHttpRequest();
 
 		xmlhttp.onreadystatechange = function () {
@@ -79,7 +79,7 @@ var ajaxFunctions = {
 			if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
 				callback(xmlhttp.response, xmlhttp.status);
 			}
-			else if(xmlhttp.readyState === 4 && xmlhttp.status === 403){
+			else if (xmlhttp.readyState === 4 && xmlhttp.status === 403) {
 				//error callback				
 				callback(xmlhttp.response, xmlhttp.status);
 			}

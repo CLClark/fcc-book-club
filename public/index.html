@@ -7,12 +7,9 @@
 	<!--Load the AJAX API-->
 	<script type="text/javascript" src="common/ajax-functions.js"></script>
 	<script type="text/javascript" src="controllers/authController.client.js"></script>
-
-	<!-- <script type="text/javascript" src="controllers/barController.client.js"></script> -->	
-
+	<script type="text/javascript" src="controllers/bookController.client.js"></script>		
 	<script type="text/javascript">
-		// MYLIBRARY.init([MYLIBRARY.barFormer, null, null]);	
-		
+		MYLIBRARY.init([MYLIBRARY.bookFormer, null, null]);			
 	</script>
 </head>
 <header></header>
@@ -20,14 +17,16 @@
 	<div id="fb-root"></div>
 	<div id="navi-container" class="container">
 		<div id="navi" class="navi-menu">
-			<div id="api-icon">API ICON</div>
-			<div id="home-icon">HOME ICON</div>
+			<div id="api-icon" class="navicon">API ICON</div>
+			<div id="home-icon" class="navicon"><a href="/">HOME ICON</a></div>
 			<div class="container" id="welcome-container">
-				<p>Welcome to books Club
-					<span id="display-name">
-					</span>
-					!
-				</p>
+				<div id="welcome-text" class="navicon">
+					<p>Welcome to books Club
+						<span id="display-name">
+						</span>
+						!
+					</p>
+				</div>				
 				<span id="auth-container">					
 				</span>
 				<br>
@@ -46,7 +45,8 @@
 
 		<div class="container center-bar">
 		<!-- 	<img id="zip-image" src="public/img/enteryourzip.png" alt="enter your zip:" /> -->
-			<input type="text" id="zipSearch" name="q" placeholder="book search">
+			<input type="text" id="zipSearch" name="q" class ="sbar" placeholder="book club search">
+			<input type="text" id="gipSearch" name="q" class ="sbar" placeholder="add a book">
 		</div>
 	</div>
 
@@ -57,12 +57,13 @@
 			</div>
 		</div>
 
-		<!--Div that will hold the polls-->
+		<!--LEFT Column (Div that will hold the polls) -->
 		<div id="pollDb">
 			<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
 			<ul id="poll-view" class="poll-view-list"></ul>
 		</div>
 
+		<!-- RIGHT Column (flex) -->
 		<div id="profile-container" style="display: none">
 			<div id="profile-navi">
 			<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Appointments" /> -->
@@ -75,11 +76,12 @@
 
 <footer>
 	<script type="text/javascript">	
-		AUTHLIB.init([null,false, AUTHLIB.authScript]);
+		AUTHLIB.init([MYLIBRARY.bookFormer,false, AUTHLIB.authScript]);
 		AUTHLIB.navi();
 		AUTHLIB.authScript(false);
 		// AUTHLIB.fbControl();
-		// MYLIBRARY.barProducer(AUTHLIB.chooser);
+		MYLIBRARY.bookAdder(); //AUTHLIB.chooser);
+		MYLIBRARY.bookFinder();
 	</script>
 </footer>
 </html>

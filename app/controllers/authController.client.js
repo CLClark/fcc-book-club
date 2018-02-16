@@ -20,7 +20,7 @@ var AUTHLIB = AUTHLIB || (function () {
 	return {
 		init: function (Args) {
 			_args = Args;
-			divCB = _args[0];
+			divCB = _args[0]; //MYLIBRARY.bookFormer
 			extScript = _args[1] || null; //callback for external script
 			authScriptCB = _args[2] || null;
 			// some other initialising
@@ -60,6 +60,10 @@ var AUTHLIB = AUTHLIB || (function () {
 				//TODO choose ot use api icon
 				// apiIcon.replaceWith(makeAPIDiv());
 			}
+			/**set the search bar */
+			let clubSearch =  document.querySelector("#zipSearch");
+			let bookSearch =  document.querySelector("#gipSearch");
+			// clubSearch.setAttribute("style", "display: none");
 
 			/**clock maker */
 			var clock = document.getElementById('clock-time') || null;
@@ -143,25 +147,26 @@ var AUTHLIB = AUTHLIB || (function () {
 		
 		authScript: function (zipIt) {
 
-			/**profile logout div */
+			/**profile logout div "login-nav" */
 			function makeDiv() {
 				var newSpan2 = document.createElement("div");
 				newSpan2.id = "login-nav";
 				var aPro1 = document.createElement("a");
 				aPro1.className = "menu";
 				aPro1.href = "/profile";
-				aPro1.innerHTML = "my Night";
+				aPro1.innerHTML = "my Profile";
 				var aLog1 = document.createElement("a");
 				aLog1.className = "menu";
 				aLog1.href = "/logout";
 				aLog1.innerHTML = "Logout";
 				var pBar = document.createElement("p");
 				pBar.innerHTML = "|";
-
+				newSpan2.appendChild(aPro1);
+				newSpan2.appendChild(pBar);
 				newSpan2.appendChild(aLog1);
 				return newSpan2;
 			}
-			/**login sign-in div */
+			/**login sign-in div  "login-nav"*/
 			function makeDefaultDiv() {
 				var newSpan = document.createElement("div");
 				newSpan.id = "login-nav";
@@ -189,37 +194,58 @@ var AUTHLIB = AUTHLIB || (function () {
 				resetSpan.id = "auth-container";
 				return resetSpan;
 			}
-
 			/**ask node.js if user is authenticated */
 			ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', apiAuth, 8000, function (err, data, status) {
 				//reset navi for new auth call
 				let resetAttempt = document.querySelector("#login-nav");
 				if (resetAttempt !== null) {
 					resetAttempt.replaceWith(resetNavi());
-				}		
+				}
+				//server response to authentication check		
 				var authObj = JSON.parse(data);
 				if(authObj == null){ console.log("auth check null "); return;}
 
 				var authNode = document.getElementById('auth-container');
-				var reg = new RegExp('^(\\d\\d\\d\\d\\d)$');
-				if (reg.test(authObj.zipStore) && zipIt) {
+				/* default search bar function, used in nightlife app
+					var reg = new RegExp('^(\\d\\d\\d\\d\\d)$');
+					if (reg.test(authObj.zipStore) && zipIt) {
 					//zipIt prevents search when authScript called elsewhere
-					var keyup = new Event('keyup');
-					document.querySelector('#zipSearch').value = authObj.zipStore;
-					document.querySelector('input#zipSearch').dispatchEvent(keyup);
-				}
-
-				if (authObj.authStatus == 1) {
-					authNode.replaceWith(makeDiv()); //login header placement
-					if (document.querySelector("#appts-img") == null) {
-						document.querySelector("#profile-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
+						var keyup = new Event('keyup');
+						document.querySelector('#zipSearch').value = authObj.zipStore;
+						document.querySelector('input#zipSearch').dispatchEvent(keyup);				
 					}
-					apptFind();
+				*/
+				let navi = document.querySelector("#navi");
+				//if user is authenticated:
+				if (authObj.authStatus == 1) {
+					//"login-nav" div (profile | sign out)
+					authNode.replaceWith(makeDiv()); 
+					/* 	if (document.querySelector("#appts-img") == null) {
+						document.querySelector("#profile-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
+					}*/
+					//add "My Books" div
+					navi.appendChild(makeMyBooks());
+					//add listener
+					var booksBtn = document.querySelector("#my-books");
+					booksBtn.addEventListener("click",myBooksFn,false);
+					//TODO: add "My Trades" div
+					navi.appendChild(makeMyTrades());
+					//add listener
+					var tradesBtn = document.querySelector("#my-trades");
+					tradesBtn.addEventListener("click",myTradesFn, false);
+					//TODO: addBooksDiiv
+					navi.appendChild(makeAddBooks());
+					//add listener
+					var addsBtn = document.querySelector("#add-books");
+					addsBtn.addEventListener("click",addBooks, false);
+					// apptFind();
 				}
-				else if (authObj.authStatus == 0) {
+				//if user is not authenticated
+				else {
 					//remove appts div "profile-container" because "not authed"
 					document.querySelector('#profile-container').remove();
 					if (authNode !== null) {
+					//add the facebook "sign in" button
 						authNode.replaceWith(makeDefaultDiv());
 						document.querySelector('#login-btn').addEventListener('click', function () {
 							location.replace('/auth/facebook');
@@ -227,8 +253,76 @@ var AUTHLIB = AUTHLIB || (function () {
 					}
 					//remove lockpic
 					loader(false);
-				}//authObj.authStatus false, else
+				}//authObj.authStatus else
 			}));
+
+			function makeMyBooks(){
+				//<div id="api-icon" class="navicon">API ICON</div>
+				let newDiv = document.createElement("div");
+				newDiv.id = "my-books";
+				newDiv.className = "navicon";
+				let aPro1 = document.createElement("a");
+				aPro1.className = "btn";
+				//href not used, event listener instead
+				// aPro1.href = "/my-books";
+				aPro1.innerHTML = "my Books";
+				newDiv.appendChild(aPro1);
+				return newDiv;
+			}//makeMyBooks
+			function makeMyTrades(){
+				let newDiv = document.createElement("div");
+				newDiv.id = "my-trades";
+				newDiv.className = "navicon";
+				let aPro1 = document.createElement("a");
+				aPro1.className = "btn";
+				//href not used, event listener instead
+				// aPro1.href = "/my-trades";
+				aPro1.innerHTML = "my Trades";
+				newDiv.appendChild(aPro1);
+				return newDiv;				
+			}//makeMyTrades
+			//execute on btn click
+			function myBooksFn (){
+				//2. query node for user books
+				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
+					//1. declare results div			
+					//3. display books as results
+					//4. display corollary divs+functions (delete, add, etc)
+					process(data);
+				}));//ajax call				
+			}
+			function myTradesFn(){
+				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-trades', 8000, function (err, data, status) {
+					//1. declare results div			
+					//3. display books as results
+					//4. display corollary divs+functions (delete, add, etc)
+					process(data);
+				}));//ajax call	
+			}//myTradesFn
+
+			function makeAddBooks(){
+				let newDiv = document.createElement("div");
+				newDiv.id = "add-books";
+				newDiv.className = "navicon";
+				let aPro1 = document.createElement("a");
+				aPro1.className = "btn";
+				//href not used, event listener instead
+				// aPro1.href = "/my-trades";
+				aPro1.innerHTML = "add Books";
+				newDiv.appendChild(aPro1);
+				return newDiv;				
+			}//makeAddBooks
+			function addBooks(){
+				//1. replace search bar with "google api search"
+				//2. add google search
+				//3. form results with listeners(or hrefs) = > server handle add books
+				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
+					//1. declare results div			
+					//3. display books as results
+					//4. display corollary divs+functions (delete, add, etc)
+					process(data);
+				}));//ajax call				
+			}
 
 			/**			 
 			 * @param {String} addText 
@@ -244,10 +338,11 @@ var AUTHLIB = AUTHLIB || (function () {
 					document.querySelector("#fresh-appts").dispatchEvent(clickEv);
 				}, false);
 				return newSpanTxt;
-			}
+			}//makeAppts return
 
 			//query server for my appointments
 			function apptFind() {
+				//Inform User, app is "loading..."
 				var tempText = document.querySelector("#appts-text");
 				if (tempText !== null) {
 					tempText.innerHTML = "Loading...";
@@ -277,6 +372,8 @@ var AUTHLIB = AUTHLIB || (function () {
 				//2. get appt-key of those appts
 				//3. append the appt-keys to the request path
 				//4. xhr
+
+				/** GET /bars/db?appts[]= */				
 				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, false, function (data) {
 					if (tempText !== null) { tempText.innerHTML = "My Appointments:"; }
 					var apptsFound = JSON.parse(data);
@@ -287,7 +384,10 @@ var AUTHLIB = AUTHLIB || (function () {
 						// proCon.appendChild(makeAppts("none found"));
 						//lockpic off
 						loader(false);
-					} else {
+					
+					}
+					//Found some appointments
+					else {
 						proCon.setAttribute("style", "display: unset");
 						//third arg is div class //divCB is called within barFormer.addElement
 						apptsFound.sort(function (a, b) {
@@ -305,8 +405,8 @@ var AUTHLIB = AUTHLIB || (function () {
 					refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
 				}));
 
+				/**add a delete btn for each poll */
 				function addDeleteDiv() {
-
 					var pWrapSup = document.querySelectorAll(".appt-wrap-sup") || null;
 					for (var pWrapper of pWrapSup) {
 						if (pWrapper.querySelector(".delete-poll") == null) {

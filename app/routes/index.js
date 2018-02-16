@@ -2,7 +2,7 @@
 
 var path = process.cwd();
 var queue = require('queue')
-var BarsHandler = require(path + '/app/controllers/barsHandler.server.js');
+var BooksHandler = require(path + '/app/controllers/booksHandler.server.js');
 
 module.exports = function (app, passport) {
 
@@ -82,14 +82,22 @@ module.exports = function (app, passport) {
 			res.json({ authStatus: 1});
 		});
 	/*********************************************/
-	var barsHandler = new BarsHandler();
-	app.route('/bars')
-		.get(barsHandler.allBars);
-		// .post(isLoggedIn, barsHandler.addBar);
+	var booksHandler = new BooksHandler();
+	app.route('/books')
+		.get(isLoggedIn, booksHandler.allBooks);		
 
-	app.route('/bars/db')
-		.get(isLoggedIn, barsHandler.getAppts)
-		.post(isLoggedIn, barsHandler.addAppt)
-		.delete(isLoggedIn, barsHandler.deleteAppt);
+	app.route('/club')
+		.get(isLoggedIn, booksHandler.ourBooks);		
+		
+	app.route('/my-books')
+		.get(isLoggedIn, booksHandler.myBooks);
+
+	// app.route('/my-trades')
+		// .get(isLoggedIn, booksHandler.myTrades);
+
+	app.route('/books/db')
+		.get(isLoggedIn, booksHandler.getAppts)
+		.post(isLoggedIn, booksHandler.addAppt)
+		.delete(isLoggedIn, booksHandler.deleteAppt);
 
 };

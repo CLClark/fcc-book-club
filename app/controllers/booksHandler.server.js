@@ -1,5 +1,5 @@
 'use strict';
-if (process.env.LOCAL !== true) {
+if (process.env.LOCAL !== false) {
 	require('dotenv').load();
 }
 
@@ -9,31 +9,32 @@ var pg = require('pg');
 var parse = require('pg-connection-string').parse;
 var config = parse(process.env.DATABASE_URL);
 
-function BarsHandler() {
+function BooksHandler() {
 
 	//find all active bars (for app home page)
-	this.allBars = function (req, res) {
-		// console.log('allBars callback');
-		//yelp api query
-		//save to session
-		var zipLocation = req.query.zip;
-		req.session.lastZip = zipLocation;
-		// console.log(req.session.lastZip);
+	this.allBooks = function (req, res) {
+		console.log('allBooks callback');		
+		var searchTerm = req.query.terms;
+		//save to session...
+		req.session.lastSearch = searchTerm;
+
+		// console.log(req.session.lastSearch);
 		const queryData = querystring.stringify({
-			term: 'bars',
-			'location': zipLocation.toString(),
-			categories: 'bars',
-			limit: 10
+			q: searchTerm.toString(),
+			// orderBy: 'relevance',
+			// printType: 'books',			
+			// maxResults: 20,
+			key: process.env.API_KEY
 		});
-		// console.log(queryData);
+		console.log(queryData);
+		// console.log(querystring.escape(queryData));
 
 		const options = {
-			hostname: 'api.yelp.com',
+			hostname: 'content.googleapis.com',
 			port: 443,
-			path: '/v3/businesses/search?' + queryData,
+			path: ('/books/v1/volumes?' + queryData),
 			method: 'GET',
-			headers: {
-				'Authorization': ('Bearer ' + process.env.API_KEY),
+			headers: {				
 				'user-agent': 'clclarkFCC/1.0',
 				'Accept-Language': 'en-US',
 				'Connection': 'keep-alive'
@@ -53,10 +54,16 @@ function BarsHandler() {
 				// console.log(JSON.parse(Buffer.concat(body1).toString()));
 				try {
 					var resJSON = JSON.parse(Buffer.concat(body1).toString());
-					// console.log("all bars");
-					barBuilder(resJSON.businesses, false)
-						.then((middleware) => {
-							return barBuilder2(middleware, req.query.timeframe)//returns an array {yelpid: id, count: number}
+					bookBuilder(resJSON.items, false)
+					.then((result) => {
+						res.json(result);
+					})
+					.catch();					
+					// console.log("all books");
+					 
+					// bookBuilder(resJSON.items, false)
+					/*	.then((middleware) => {
+							return bookBuilder2(middleware, req.query.timeframe)//returns an array {yelpid: id, count: number}
 								.then((bb2) => {
 									let mapped = middleware.map((eachB) => {
 										return new Promise((rezolve, rezect) => {
@@ -95,7 +102,8 @@ function BarsHandler() {
 							// res.json(builtResults);
 							// storeBusinesses(builtResults);
 						})
-						.catch(e => { console.log(e + " all bars error"); });
+						.catch(e => { console.log(e + " all books error"); });
+						 */
 				} catch (e) { console.error(e); }
 			});
 		});
@@ -103,74 +111,73 @@ function BarsHandler() {
 			console.error(`problem with request: ${e.message}`);
 		});
 		sreq.end();
-	}//allBars function
+	}//allBooks function
+	/**will not need - storeBusinesses
+		function storeBusinesses(data) {
+			//		var pool4 = new pg.Pool(config);
+			//		var p = Promise.resolve();		
+			//		for (let i = 0; i < data.length; i++) {
+			//			p = p.then(() => {
+			//				storeBusiness(data[i], pool4);				
+			//			});			
+			//		}//for loop
 
-	function storeBusinesses(data) {
-		//		var pool4 = new pg.Pool(config);
-		//		var p = Promise.resolve();		
-		//		for (let i = 0; i < data.length; i++) {
-		//			p = p.then(() => {
-		//				storeBusiness(data[i], pool4);				
-		//			});			
-		//		}//for loop
+			var pool5 = new pg.Pool(config);
+			let books = [];
 
-		var pool5 = new pg.Pool(config);
-		let bars = [];
+			var multiBook = data.forEach(function (eachBook) {
+				var promToP = storeBusiness(eachBook, pool5);
+				books.push(promToP);
+			});
 
-		var multiBar = data.forEach(function (eachBar) {
-			var promToP = storeBusiness(eachBar, pool5);
-			bars.push(promToP);
-		});
+			Promise.all(books)
+				.then(doneInserting => (pool5.end()))
+				.catch(e => { console.log(e + "store businesses error"); });
 
-		Promise.all(bars)
-			.then(doneInserting => (pool5.end()))
-			.catch(e => { console.log(e + "store businesses error"); });
+		}//store businesses		
+		function storeBusiness(data, poolInst) {
 
-	}//store businesses		
+			return new Promise((resolve, reject) => {
 
-	function storeBusiness(data, poolInst) {
+				var booksJSON = (data);
 
-		return new Promise((resolve, reject) => {
+				var pool4 = poolInst;
+				//			console.log("store business: ")
+				// var i = 0;		
+				const insertText = 'INSERT INTO books(\"busiName\", \"yelpID\") ' +
+					'VALUES($1, $2) ' +
+					'ON CONFLICT DO NOTHING RETURNING *';
 
-			var barsJSON = (data);
+				var busName = new String(booksJSON.title).substring(0, 140) || null; //arbitrary cut off
+				var yelpId = new String(booksJSON.id).substring(0, 100) || null;
 
-			var pool4 = poolInst;
-			//			console.log("store business: ")
-			// var i = 0;		
-			const insertText = 'INSERT INTO bars(\"busiName\", \"yelpID\") ' +
-				'VALUES($1, $2) ' +
-				'ON CONFLICT DO NOTHING RETURNING *';
+				var insertValues = [];
+				insertValues.push(busName);
+				insertValues.push(yelpId);
+				// console.log(insertValues);
 
-			var busName = new String(barsJSON.title).substring(0, 140) || null; //arbitrary cut off
-			var yelpId = new String(barsJSON.id).substring(0, 100) || null;
+				//new postgresql connection
+				pool4.connect()
+					.then(client2 => {
+						// console.log('pg-connected4');				
+						client2.query(insertText, insertValues, function (err, result) {
+							client2.release();
+							if (err) {
+								console.log(err);
+								reject(err);
+							} else {
+								resolve(result);
+								console.log("inserted books: " + result.rowCount);
+							}
+						});//client.query
+					})
+					.catch(err => console.error('error connecting2', err.stack));
+				//			.then(() => {pool4.end()});
+			}); //promise
+		}//store businesses
+	*/
 
-			var insertValues = [];
-			insertValues.push(busName);
-			insertValues.push(yelpId);
-			// console.log(insertValues);
-
-			//new postgresql connection
-			pool4.connect()
-				.then(client2 => {
-					// console.log('pg-connected4');				
-					client2.query(insertText, insertValues, function (err, result) {
-						client2.release();
-						if (err) {
-							console.log(err);
-							reject(err);
-						} else {
-							resolve(result);
-							console.log("inserted bars: " + result.rowCount);
-						}
-					});//client.query
-				})
-				.catch(err => console.error('error connecting2', err.stack));
-			//			.then(() => {pool4.end()});
-		}); //promise
-	}//store businesses
-
-	/*
-	appt object:
+	/*	appt object:
 		timestamp	
 		userid	
 		yelpid	
@@ -178,53 +185,58 @@ function BarsHandler() {
 		active
 	*/
 	//accepts JSON array of yelp businesses, then outputs JSON for client
-	function barBuilder(result, opts) {
+	function bookBuilder(result, opts) {
 		return new Promise((resolve, reject) => {
-			// console.log("barBuilder callback");
+			console.log("bookBuilder callback");
 
 			if (!Array.isArray(result)) {
 				console.log(result);
 				reject("input not an array");
 			} else {
 				var aggregator = [];
-				var currentBar = ""; var currentPIndex = -1;
+				var currentBook = ""; var currentPIndex = -1;
 				var totalVotes = 0;
 				var vRay = [];
 				for (var i = 0; i < result.length; i++) {
-					var barId = result[i].id || "";
-					if (currentBar !== barId) {
-						currentBar = barId;
-						aggregator.push({
-							id: barId,
-							title: result[i].name,
-							rating: result[i].rating,
-							coordinates: result[i].coordinates,
-							price: result[i].price,
-							display_phone: result[i].display_phone,
-							image_url: result[i].image_url,
-							url: result[i].url
-						});
-						if (opts) {
-							let leng = aggregator.length;
-							aggregator[(leng - 1)]["appt"] = result[i].appt;
-							delete aggregator[(leng - 1)]["appt"].userid;
-							delete aggregator[(leng - 1)]["appt"].location;
-							delete aggregator[(leng - 1)]["appt"].active;
+					var bookId = result[i].id || "";
+					let book = result[i];
+					if (currentBook !== bookId) {
+						currentBook = bookId;
+						try{
+							aggregator.push({
+								id: bookId,
+								title: book.volumeInfo.title,
+								authors: book.volumeInfo.authors,
+								publishedDate: book.volumeInfo.publisheddate,
+								ISBN13: book.volumeInfo.industryIdentifiers[1].identifier,
+								pages: book.volumeInfo.pageCount,							
+								image_url: book.volumeInfo.imageLinks.thumbnail,
+								language: book.volumeInfo.language,
+								url: book.volumeInfo.infoLink						
+							});
+						} catch (error) {							
 						}
-					}//if current bar
+						if (opts) {
+							// let leng = aggregator.length;
+							// aggregator[(leng - 1)]["appt"] = result[i].appt;
+							// delete aggregator[(leng - 1)]["appt"].userid;
+							// delete aggregator[(leng - 1)]["appt"].location;
+							// delete aggregator[(leng - 1)]["appt"].active;
+						}
+					}//if current book
 				}//for loop
 
 				if (opts) { console.log(opts); }
 				resolve(aggregator);
 			}//passes "array" test
 		});
-	}//barBuilder
-
+	}//bookBuilder
+	
 	//accepts JSON array of yelp businesses, then outputs JSON for client
 	//accepts a "time" to refine db query to "relevant" dates
-	function barBuilder2(result, timeframe) {
+	function bookBuilder2(result, timeframe) {
 		return new Promise((resolve, reject) => {
-			// console.log("barBuilder2 callback");
+			console.log("bookBuilder2 callback");
 			if (!Array.isArray(result)) {
 				console.log(result);
 				reject("input not an array");
@@ -236,10 +248,10 @@ function BarsHandler() {
 					.catch((e) => { console.log(e); })
 			}
 		});
-		function promisifier(barData, timeframe) {
+		function promisifier(bookData, timeframe) {
 			return new Promise((resolve, reject) => {
-				//query pgsql with bar data
-				apptQMaker(barData, timeframe)
+				//query pgsql with book data
+				apptQMaker(bookData, timeframe)
 					.then((queryArray) => {
 						var poolAQ = new pg.Pool(config);
 						let text = queryArray[0];
@@ -271,8 +283,9 @@ function BarsHandler() {
 			});//return statement
 		}//promisifier
 
-		//used on each bar object			
-		function apptQMaker(barz, timeframe) {
+		//used on each book object
+		//returns array in syntax to query PG database
+		function apptQMaker(bookz, timeframe) {
 			return new Promise((resolve, reject) => {
 				//query for only active "true" appointments
 				var text = "SELECT yelpid, count(*) FROM appts WHERE NOT active = false AND timestamp >= $1 ";
@@ -284,12 +297,12 @@ function BarsHandler() {
 				time.setDate(time.getDate() - 0);
 				values.push(time.toISOString());	//$1
 				console.log(time.toISOString());
-				if (Array.isArray(barz)) {
-					//yes> add each barid and text to the arrays
-					console.log(Array.isArray(barz) + " : is array check : apptQMAKER");
-					let cap = barz.length - 1;
-					var combNots = barz.reduce(function (acc, cVal, cInd, array) {
-						//add the barid
+				if (Array.isArray(bookz)) {
+					//yes> add each bookid and text to the arrays
+					console.log(Array.isArray(bookz) + " : is array check : apptQMAKER");
+					let cap = bookz.length - 1;
+					var combNots = bookz.reduce(function (acc, cVal, cInd, array) {
+						//add the bookid
 						values.push(cVal.id);
 						if (cInd < cap) {
 							return acc.concat(('$' + (2 + cInd) + ', '));
@@ -302,49 +315,46 @@ function BarsHandler() {
 					resolve([combNots.concat(') GROUP BY yelpid'), values]);
 				}
 				else {
-					console.log(Array.isArray(barz) + " : is array check : apptQMAKER");
+					console.log(Array.isArray(bookz) + " : is array check : apptQMAKER");
 					//no>return the text/values:
 					resolve([text, values]);
 				}//else
 			});//return
 		}//apptQMaker
-	}//barBuilder2
-
-	//search DB for bar data that user owns//'GET' to /bars/db
-	this.getAppts = function (req, res) {
-		// console.log('handler.server.js.getAppts');		
+	}//bookBuilder2
+/*********************** *****************************/
+	this.ourBooks = function (req, res) {
+		console.log('handler.server.js.ourBooks');		
 		var pool = new pg.Pool(config);
+
 		function queryMaker() {
 			return new Promise((resolve, reject) => {
-				//query for only active "true" appointments
-				var text = 'SELECT * FROM appts WHERE userid = $1 AND NOT active = false';
+				const values = [];		
+				var terms = req.query.terms;
+				var tsQuery;						
 
-				const values = [];
-				var uid = req.user.id;
-				values.push(uid);
-
-				//check if query has any appts
-				if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
-					//yes> add each appt and text to the arrays
-					console.log(Array.isArray(req.query.appts) + " : is array check");
-					let cap = req.query.appts.length - 1;
-					var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
-						values.push(cVal);
-						if (cInd < cap) {
-							return acc.concat(('$' + (2 + cInd) + ', '));
-						}
-						else {
-							return acc.concat(('$' + (2 + cInd)));
-						}
-					}, (text.concat(' AND _id NOT IN ('))
-					);
-					resolve([combNots.concat(')'), values]);
+				//check if query has terms (or not = all results)
+				if(terms.length > 0 && terms.length < 50){
+					console.log("terms found: " + req.query.terms);					
+					let tsSplit = terms.split(/[ ,]+/);
+					tsQuery = tsSplit.join(" & ");
+					let text = returnText("tsv @@ to_tsquery($1) AND ");
+					// values.push(tsQuery);
+					resolve([	text,	[tsQuery]	]);
 				}
-				else {
-					console.log(Array.isArray(req.query.appts) + " : is array check");
-					//no>return the text/values:
-					resolve([text, values]);
+				else{
+					//find all		
+					let text = returnText("");			
+					resolve([text, values]);														
 				}
+				function returnText(optQuery) {
+					//SELECT title, authors[1] FROM books WHERE tsv @@ to_tsquery($1);
+					let tmpText  = 'SELECT title, authors, isbn13, publisheddate, id, image_url, language, url, active, pages ' +
+						' FROM books WHERE ' + 
+						optQuery +
+						' NOT active = false';
+					return tmpText;
+				}			
 			});
 		}
 
@@ -355,22 +365,23 @@ function BarsHandler() {
 			// console.log(values);
 			pool.connect()
 				.then(client => {
-					// console.log('pg-connected: getAppts')
+					// console.log('pg-connected: getBooks')
 					client.query(text, values, function (err, result) {
 						if (err) {
 							res.status(403);
 							console.log(err);
 							console.log("get appts error");
-							res.json({ barsFound: "none" });
+							res.json({ booksFound: "none" });
 						}
 						let rc = result.rowCount;
 						client.release();
 						if (rc == 0) {
 							res.status(200);
-							res.json({ barsFound: "none" });
+							res.json({ booksFound: "none" });
 						} else {
-
-							const promiseSerial = funcs =>
+							// console.log(result.rows);
+							res.json(result.rows);
+						/* const promiseSerial = funcs =>
 								funcs.reduce((promise, func) =>
 									promise.then(result => func().then(Array.prototype.concat.bind(result))),
 									Promise.resolve([])
@@ -381,13 +392,13 @@ function BarsHandler() {
 							);
 
 							promiseSerial(funcs)
-								.then(promies => (barBuilder(promies, true)))
-								.then(builtBars => {
-									res.json(builtBars);
+								.then(promies => (bookBuilder(promies, true)))
+								.then(builtBooks => {
+									res.json(builtBooks);
 									// console.log("builtBarsVVVV");							
 								})
 								.catch(e => { console.log(e + "loopy Loop"); });
-
+						*/
 						}
 					});
 				})
@@ -469,8 +480,206 @@ function BarsHandler() {
 				yreq.end();
 			});//promise		
 		}//yelpSingle		
+	}//ourBooks
+
+	this.myBooks = function (req, res) {
+		var pool = new pg.Pool(config);
+		function queryMaker() {
+			return new Promise((resolve, reject) => {
+				//query for only active "true" appointments
+				var text = 'SELECT * FROM ownership WHERE userid = $1 AND NOT active = false';
+
+				const values = [];
+				var uid = req.user.id;
+				values.push(uid);
+
+				//check if query has any appts
+				if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
+					//yes> add each appt and text to the arrays
+					console.log(Array.isArray(req.query.appts) + " : is array check");
+					let cap = req.query.appts.length - 1;
+					var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
+						values.push(cVal);
+						if (cInd < cap) {
+							return acc.concat(('$' + (2 + cInd) + ', '));
+						}
+						else {
+							return acc.concat(('$' + (2 + cInd)));
+						}
+					}, (text.concat(' AND _id NOT IN ('))
+					);
+					resolve([combNots.concat(')'), values]);
+				}
+				else {
+					console.log(Array.isArray(req.query.appts) + " : is array check");
+					//no>return the text/values:
+					resolve([text, values]);
+				}
+			});
+		}
+		//more code here
+	}//myBooks
+
+	/**myBooks equivalent */	//search DB for book data that user owns//'GET' to /books/db	
+	this.getAppts = function (req, res) {
+		// console.log('handler.server.js.getAppts');		
+		var pool = new pg.Pool(config);
+		function queryMaker() {
+			return new Promise((resolve, reject) => {
+				//query for only active "true" appointments
+				var text = 'SELECT * FROM appts WHERE userid = $1 AND NOT active = false';
+
+				const values = [];
+				var uid = req.user.id;
+				values.push(uid);
+
+				//check if query has any appts
+				if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
+					//yes> add each appt and text to the arrays
+					console.log(Array.isArray(req.query.appts) + " : is array check");
+					let cap = req.query.appts.length - 1;
+					var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
+						values.push(cVal);
+						if (cInd < cap) {
+							return acc.concat(('$' + (2 + cInd) + ', '));
+						}
+						else {
+							return acc.concat(('$' + (2 + cInd)));
+						}
+					}, (text.concat(' AND _id NOT IN ('))
+					);
+					resolve([combNots.concat(')'), values]);
+				}
+				else {
+					console.log(Array.isArray(req.query.appts) + " : is array check");
+					//no>return the text/values:
+					resolve([text, values]);
+				}
+			});
+		}
+		queryMaker().then((textArray) => {
+			var text = textArray[0];
+			// console.log(text);	
+			var values = textArray[1];
+			// console.log(values);
+			pool.connect()
+				.then(client => {
+					// console.log('pg-connected: getAppts')
+					client.query(text, values, function (err, result) {
+						if (err) {
+							res.status(403);
+							console.log(err);
+							console.log("get appts error");
+							res.json({ barsFound: "none" });
+						}
+						let rc = result.rowCount;
+						client.release();
+						if (rc == 0) {
+							res.status(200);
+							res.json({ barsFound: "none" });
+						} else {
+
+							const promiseSerial = funcs =>
+								funcs.reduce((promise, func) =>
+									promise.then(result => func().then(Array.prototype.concat.bind(result))),
+									Promise.resolve([])
+								);
+							// convert each url to a function that returns a promise
+							const funcs = result.rows.filter(rowCheck => rowCheck).map(
+								pgResp => () => yelpSingle(pgResp, null)
+							);
+
+							promiseSerial(funcs)
+								.then(promies => (barBuilder(promies, true)))
+								.then(builtBars => {
+									res.json(builtBars);
+									// console.log("builtBarsVVVV");							
+								})
+								.catch(e => { console.log(e + "loopy Loop"); });
+
+						}
+					});
+				})
+				.catch(err => console.error('error connecting', err.stack))
+				.then(() => pool.end());
+		})
+			.catch(err => console.error('error getAppts', err.stack))
+		//requests single business data from yelp api,
+		//TODO qps on a timer
+		function yelpSingle(appt, options) {
+			/***	appt object:				
+				timestamp	
+				userid	
+				yelpid	
+				location	
+				active
+				_id			*/
+			return new Promise((resolve, reject) => {
+
+				var queryData = querystring.escape(appt.yelpid);
+
+				console.log("query data is:   " + queryData);
+
+				var bodyJSON;
+				var options = {
+					hostname: 'api.yelp.com',
+					port: 443,
+					path: ('/v3/businesses/' + queryData),
+					method: 'GET',
+					headers: {
+						'Authorization': ('Bearer ' + process.env.API_KEY),
+						'user-agent': 'clclarkFCC/1.0',
+						'Accept-Language': 'en-US',
+					},
+					timeout: 4000
+				};
+				const yreq = https.request(options, (resf) => {
+					var body1 = [];
+					console.log(`STATUS: ${res.statusCode}` + "yelp Single");
+					// console.log(`HEADERS: ${JSON.stringify(resf.headers)}`);					
+					if (resf.headers["content-type"] == "application/json") {
+
+						resf.on('data', (d) => {
+							body1.push(d);
+						});
+						resf.on('end', () => {
+							try {
+								// console.log(body1);
+								// console.log("pre-parse");
+								let bodyJSON = JSON.parse(Buffer.concat(body1).toString());
+								// console.log(">>>>post-parse");
+								//add original appointment data
+								bodyJSON["appt"] = appt;
+
+								// console.log(JSON.stringify(bodyJSON).substring(0, 20));
+								// console.log("json body rec'd ***************");
+
+								resolve(bodyJSON);
+							} catch (e) { console.error(e.message); reject(e); }
+						});
+					}//if content type
+					else {
+						resf.on('data', (d) => {
+							process.stdout.write(d);
+						});
+						resf.on('end', () => {
+							reject("not json");
+						});
+					}
+				});
+				yreq.on('timeout', (e) => {
+					console.error(`request timeout: ${e.message}`);
+					yreq.abort();
+					//resolve empty object
+					resolve({});
+				});
+				yreq.on('error', (e) => { console.error(`problem with request: ${e.message}`); reject(e); });
+				yreq.end();
+			});//promise		
+		}//yelpSingle		
 	}//getAppts
 
+	/**addMyBook equivalent */
 	this.addAppt = function (req, res) {
 		var timeStamp = new String(req.query.date).substring(0, 140) || null;
 		var yelpId = new String(req.query.bid).substring(0, 100) || null;
@@ -518,6 +727,7 @@ function BarsHandler() {
 		// console.log('addAppt callback');
 	}//addAppt
 
+	/**request a single Google Book Api */
 	function yelpSingle(appt, options) {
 		/*
 		appt object:				
@@ -587,6 +797,7 @@ function BarsHandler() {
 		});//promise		
 	}//yelpSingle		
 
+	/**remove my Book */
 	this.deleteAppt = function (req, res) {
 
 		var apptId = new String(req.query.appt).substring(0, 100) || null;
@@ -621,6 +832,8 @@ function BarsHandler() {
 	}//this.deleteBar
 
 
+
+
 	/***search data for user profile + bars	
 		this.myBars = function (req, res) {
 			console.log('myBars callback');
@@ -651,6 +864,6 @@ function BarsHandler() {
 		}
 	 */
 
-}//BarsHandler
+}//BooksHandler
 
-module.exports = BarsHandler;
+module.exports = BooksHandler;
