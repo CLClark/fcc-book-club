@@ -118,6 +118,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				// 	pollView.removeChild(pollView.firstChild);
 				// }
 			}
+			if(jsonData == null){ return;}
 			//loop through json array, call HTML builder
 			for (var i = 0; i < jsonData.length; i++) {
 				//create a div for each poll
@@ -161,8 +162,21 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				var titleA = document.createElement("a");
 				titleA.className = "poll-title";
 				titleA.innerHTML = polljone.title;
-				titleA.href = (pollCopy["url"]);
-				titleDiv.appendChild(titleA);
+				// titleA.href = (pollCopy["url"]);				
+				titleDiv.appendChild(titleA);				
+				var addlink = '/my-books?isbn=' + polljone.isbn13;
+				titleDiv.setAttribute("addlink",addlink);
+				
+				titleDiv.addEventListener("click", addmine.bind(titleDiv), false);
+				function addmine(){	
+					let postlink = this.getAttribute("addlink");
+					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', postlink, 8000, function (err, data, status) {
+						if(err){console.log(err)}
+						else{
+							console.log(data);
+						}
+					}));					
+				}				
 				newWrapInfo.appendChild(titleDiv);
 
 				//polljone.count div 
@@ -171,7 +185,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				if (polljone.count >= 0) {
 					countDiv.innerHTML = polljone.count + " GOING";
 					newWrapInfo.appendChild(countDiv);
-				}
+				} 
 
 				//poll-wrap
 				var newWrap = document.createElement("div");
@@ -214,7 +228,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 
 					let isbn = document.createElement("li");
 					isbn.id = "isbn-details";
-					isbn.innerHTML = ("ISBN13: " + jsondata.ISBN13);
+					isbn.innerHTML = ("ISBN13: " + jsondata.isbn13);
 
 					let pages = document.createElement("li");
 					pages.id = "pages-details";

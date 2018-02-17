@@ -90,14 +90,16 @@ module.exports = function (app, passport) {
 		.get(isLoggedIn, booksHandler.ourBooks);		
 		
 	app.route('/my-books')
-		.get(isLoggedIn, booksHandler.myBooks);
+		.get(isLoggedIn, booksHandler.myBooks)
+		.post(isLoggedIn, booksHandler.addMyBook)
+		.delete(isLoggedIn, booksHandler.removeMyBook);
 
 	// app.route('/my-trades')
 		// .get(isLoggedIn, booksHandler.myTrades);
 
-	app.route('/books/db')
-		.get(isLoggedIn, booksHandler.getAppts)
-		.post(isLoggedIn, booksHandler.addAppt)
-		.delete(isLoggedIn, booksHandler.deleteAppt);
+	// app.route('/books/db')
+	// 	.get(isLoggedIn, booksHandler.getAppts)
+	// 	.post(isLoggedIn, booksHandler.addMyBook)
+	// 	.delete(isLoggedIn, booksHandler.deleteAppt);
 
 };

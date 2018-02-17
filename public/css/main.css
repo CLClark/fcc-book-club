@@ -21,7 +21,7 @@ body {
 	font-size: 16px;
 	margin: 0;
 	padding: 0;
-	background-color: #b7e9f5;
+	background-color: #FFFFA5;
 }
 
 header {
@@ -385,7 +385,7 @@ span {
    display: flex;
    flex-direction: row;
    min-height: 150px;
-   background-color: #02144a;
+   background-color: lightyellow;
    margin: 4px;
    border-radius: 3px;
    /* max-width: 23%; */

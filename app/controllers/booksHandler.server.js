@@ -11,7 +11,7 @@ var config = parse(process.env.DATABASE_URL);
 
 function BooksHandler() {
 
-	//find all active bars (for app home page)
+	/** */
 	this.allBooks = function (req, res) {
 		console.log('allBooks callback');		
 		var searchTerm = req.query.terms;
@@ -197,25 +197,34 @@ function BooksHandler() {
 				var currentBook = ""; var currentPIndex = -1;
 				var totalVotes = 0;
 				var vRay = [];
-				for (var i = 0; i < result.length; i++) {
+				/* for (var i = 0; i < result.length; i++) {
 					var bookId = result[i].id || "";
 					let book = result[i];
 					if (currentBook !== bookId) {
 						currentBook = bookId;
-						try{
+						// try{
+							let bookTitle = book.title || book.volumeInfo.title;
+							let bookAuthors = book.authors || book.volumeInfo.authors;
+							let bookPublishedDate = book.publisheddate || book.volumeInfo.publisheddate;
+							let bookIsbn13 = book.isbn13 || book.volumeInfo.industryIdentifiers[1].identifier;
+							let bookPages = book.pages || book.volumeInfo.pageCount;
+							let bookImageUrl = book["image_url"] || book.volumeInfo.imageLinks.thumbnail;
+							let bookLanguage = book.language || book.volumeInfo.language;
+							let bookUrl = book.url || book.volumeInfo.infoLink;
+
 							aggregator.push({
-								id: bookId,
-								title: book.volumeInfo.title,
-								authors: book.volumeInfo.authors,
-								publishedDate: book.volumeInfo.publisheddate,
-								ISBN13: book.volumeInfo.industryIdentifiers[1].identifier,
-								pages: book.volumeInfo.pageCount,							
-								image_url: book.volumeInfo.imageLinks.thumbnail,
-								language: book.volumeInfo.language,
-								url: book.volumeInfo.infoLink						
+								id: bookIsbn13, //id as isbn13
+								title: bookTitle,
+								authors: bookAuthors,
+								publishedDate: bookPublishedDate,
+								isbn13: bookIsbn13,
+								pages: bookPages,							
+								image_url: bookImageUrl,
+								language: bookLanguage,
+								url: bookUrl						
 							});
-						} catch (error) {							
-						}
+						// } catch (error) {							
+						// }
 						if (opts) {
 							// let leng = aggregator.length;
 							// aggregator[(leng - 1)]["appt"] = result[i].appt;
@@ -225,9 +234,41 @@ function BooksHandler() {
 						}
 					}//if current book
 				}//for loop
-
+ */
 				if (opts) { console.log(opts); }
-				resolve(aggregator);
+				let finalProm = result.map((value, index) => {
+					return new Promise((resolve, reject) => {						
+						let book = value;
+						try{
+						let bookTitle = book.title || book.volumeInfo.title;
+						let bookAuthors = book.authors || book.volumeInfo.authors;
+						let bookPublishedDate = book.publisheddate || book.volumeInfo["publishedDate"];
+						let bookIsbn13 = book.isbn13 || book.volumeInfo.industryIdentifiers[1].identifier;
+						let bookPages = book.pages || book.volumeInfo.pageCount;
+						let bookImageUrl = book["image_url"] || book.volumeInfo.imageLinks.thumbnail;
+						let bookLanguage = book.language || book.volumeInfo.language;
+						let bookUrl = book.url || book.volumeInfo.infoLink;
+						resolve({
+							id: bookIsbn13, //id as isbn13
+							title: bookTitle,
+							authors: bookAuthors,
+							publishedDate: bookPublishedDate,
+							isbn13: bookIsbn13,
+							pages: bookPages,
+							image_url: bookImageUrl,
+							language: bookLanguage,
+							url: bookUrl
+						})												
+						} catch (error) {
+							console.log(error)	
+						}
+					});
+				})
+				Promise.all(finalProm).then(wholeArray => resolve(wholeArray))
+				.catch( (e) => {
+					reject(e);	
+				});
+				// resolve(aggregator);
 			}//passes "array" test
 		});
 	}//bookBuilder
@@ -349,10 +390,10 @@ function BooksHandler() {
 				}
 				function returnText(optQuery) {
 					//SELECT title, authors[1] FROM books WHERE tsv @@ to_tsquery($1);
-					let tmpText  = 'SELECT title, authors, isbn13, publisheddate, id, image_url, language, url, active, pages ' +
-						' FROM books WHERE ' + 
+					let tmpText  = 'SELECT title, authors, isbn13, publisheddate, image_url, language, url, active, pages ' +
+						' FROM public.books WHERE ' + 
 						optQuery +
-						' NOT active = false';
+						' NOT public.books.active = false';
 					return tmpText;
 				}			
 			});
@@ -379,8 +420,13 @@ function BooksHandler() {
 							res.status(200);
 							res.json({ booksFound: "none" });
 						} else {
-							// console.log(result.rows);
-							res.json(result.rows);
+							console.log(JSON.stringify(result));
+							bookBuilder(result.rows, false)
+							.then(builtBooks => {
+								console.log("built books: " + builtBooks);
+								res.json(builtBooks);
+							})
+							.catch(e => { console.log(e + "loopy Loop"); });
 						/* const promiseSerial = funcs =>
 								funcs.reduce((promise, func) =>
 									promise.then(result => func().then(Array.prototype.concat.bind(result))),
@@ -519,7 +565,194 @@ function BooksHandler() {
 		}
 		//more code here
 	}//myBooks
+/***************************************** */
+	this.addMyBook = function (req, res) {
+		console.log('addMyBook callback');
+		var userId = new String(req.user.id).substring(0, 140) || null; //arbitrary cut off
 
+		if (req.query.isbn !== null && req.query.isbn !== "undefined") {
+			//1 get the book Google ID,
+			var volId = new String(req.query.isbn).substring(0, 17) || null;
+			//save to session...
+			req.session.lastSearch = req.query.isbn;
+
+			//2 query Google with ID
+			const queryData = querystring.stringify({
+				q: ("isbn:" + volId), //q=isbn:1234123412341
+				// orderBy: 'relevance',
+				// printType: 'books',			
+				// maxResults: 20,
+				key: process.env.API_KEY
+			});
+			console.log(queryData);
+
+			const options = {
+				hostname: 'content.googleapis.com',
+				port: 443,
+				path: ('/books/v1/volumes?' + queryData),
+				method: 'GET',
+				headers: {
+					'user-agent': 'clclarkFCC/1.0',
+					'Accept-Language': 'en-US',
+					'Connection': 'keep-alive'
+				}
+			};
+
+			const sreq = https.request(options, (res2) => {
+				var body1 = [];
+				console.log(`STATUS: ${res2.statusCode}`); // console.log(`HEADERS: ${JSON.stringify(res2.headers)}`);			
+				res2.on('data', (d) => {
+					body1.push(d);
+					// console.log(d);
+				});
+				res2.on('end', () => { // console.log(body1); // console.log(JSON.parse(Buffer.concat(body1).toString()));
+					try {
+						var resJSON = JSON.parse(Buffer.concat(body1).toString());
+						bookBuilder(resJSON.items, false)
+							.then((result) => {
+								//3 add to database with Google Data: books and ownership tables
+								console.log("bookBuilder result: " + JSON.stringify(result));
+								return insertMyBook(result[0])								
+								.then((insertResult) => {
+									console.log("insert result: " + insertResult)
+									return updateOwnership(req, result[0], true)									
+								})
+								.then((updateRes) => {									
+									res.json(updateRes);									
+								}).catch((e) => {console.log(e);	})
+							})
+							.catch((err) => { console.log(e);	});						
+					} catch (e) { console.error(e); }
+				});
+			});
+			sreq.on('error', (e) => {
+				console.error(`problem with request: ${e.message}`);
+			});
+			sreq.end();
+
+			//access postgres db
+			function insertMyBook(book) {
+				// console.log(JSON.stringify(book));
+				return new Promise((resolve, reject) => {
+					const insertText =
+						'INSERT INTO public.books ("title","isbn13","authors","publisheddate","pages","image_url","language","url","active") ' +
+						'VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) ' +
+						' ON CONFLICT ("isbn13")' +
+						'DO NOTHING RETURNING (title,isbn13,authors,publisheddate,pages,image_url,language,url,active)';// RETURNING (title,isbn13,"authors","publisheddate","pages","image_url","language","url","active")';
+					const insertValues = [];
+					try {
+						insertValues.push(book.title); //id						
+						insertValues.push(book.isbn13);
+						insertValues.push((book.authors));
+						insertValues.push((book["publishedDate"]));
+						insertValues.push((book.pages));
+						insertValues.push((book["image_url"]));
+						insertValues.push((book.language));
+						insertValues.push((book.url));
+						insertValues.push(true);
+						/* do {
+							insertValues.push('{null}'); //ensure length
+						} while (insertValues.length 11 9); */
+						function pushSafe(content) {
+							if (content !== null) {
+								return content;
+							} else {
+								return "null";
+							}
+						}//pushSafe
+					} catch (error) { console.log(error); }
+
+					//new postgresql connection
+					var poolz3 = new pg.Pool(config);
+					poolz3.connect()
+						.then(client2 => {
+							// console.log('pg-connected2');
+							client2.query(insertText, insertValues, function (err, result) {
+								client2.release();
+								if (err) {console.log("REJECTED" + err); reject(err);								
+								} else {									
+									console.log("insertBook result: " + JSON.stringify(result));									
+									resolve(result.rows);
+								}//else
+							});//client.query
+						})
+						.catch(err => console.error('error connecting2', err.stack))
+						.then(() => poolz3.end());
+				});//insertPromise				
+			}//insertMyBook fn
+		}//if
+		else{
+			res.sendStatus(404);
+		}
+	}//this.addMyBook
+
+	
+	/**
+	 * access postgres db, provide book data, pg pool, + "add or remove"
+	 * @param {Object} bookData 
+	 * @param {PG pool Object} exPool 
+	 * @param {boolean} change 
+	 */
+	function updateOwnership(req, bookData, change) {
+		return new Promise((resolve, reject) => {
+			var insertText;			
+			const insertValues = [];
+			let userid = req.user.id;
+			let active;
+			if(change == true){
+			//add operation
+				active = change;
+				insertText =
+				//id is generated by postgres; "dateRemoved" not used
+				'INSERT INTO public.ownership ("owner","bookisbn","dateAdded","active") ' +
+				'VALUES($1, $2, $3, $4) ' +
+				 'RETURNING *';
+				// 'ON CONFLICT (owner,bookisbn) DO NOTHING'
+			} else if ( change == false ) {
+			//remove operation
+				active = change;
+				insertText =
+				//id is generated by postgres; "dateAdded" not used
+				'INSERT INTO public.ownership ("owner","bookisbn","dateRemoved","active") ' +
+				'VALUES($1, $2, $3, $4) ' +
+				'RETURNING *';
+//				'ON CONFLICT (owner,bookisbn) DO NOTHING RETURNING (bookisbn)'; 
+			}
+			if (userid !== null && userid !== undefined) {
+				try {
+					let today = new Date(Date.now());
+					insertValues.push(userid); //owner id
+					insertValues.push(bookData.isbn13); //book id
+					insertValues.push(today.toISOString()); //dateAdded					
+					insertValues.push(active);					
+					function pushSafe(content) {if (content !== null) {return content;} else {return "null";}
+					}//pushSafe
+				} catch (error) { console.log("ownership try err: " + error); }
+				//new postgresql connection
+				var exPool = new pg.Pool(config);			
+				exPool.connect()
+					.then(client2 => {
+						// console.log('pg-connected2');
+						client2.query(insertText, insertValues, function (err, result) {
+							client2.release();
+							if (err) {	console.log("ownership query err: " + err); reject(err);
+							} else {
+								console.log("ownership result: " + JSON.stringify(result));
+								resolve(result);
+							}//else
+						});//client.query
+					})
+					.then(() => {			exPool.end();					})
+					.catch(err => console.error('error connectingZ', err.stack))
+					//end pool in parent function					
+			}
+		});//promise return
+	}//updateOwnership
+	/***************************************** */
+	this.removeMyBook = function (req, res) {
+		var userId = new String(req.user.id).substring(0, 140) || null; //arbitrary cut off
+	}//removeMyBook
+/***************************************** */
 	/**myBooks equivalent */	//search DB for book data that user owns//'GET' to /books/db	
 	this.getAppts = function (req, res) {
 		// console.log('handler.server.js.getAppts');		
