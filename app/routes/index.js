@@ -53,11 +53,11 @@ module.exports = function (app, passport) {
 			res.redirect('/');
 		});
  
-	/*app.route('/profile')
+	app.route('/profile')
 		.get(isLoggedIn, function (req, res) {
 			res.sendFile(path + '/public/profile.html');
 		});
- */
+ 
  
 	/*app.route('/api/:id')
 		.get(isLoggedIn, function (req, res) {
@@ -78,8 +78,8 @@ module.exports = function (app, passport) {
 
 	app.route('/auth/check')
 		.get(isAuthed, function (req, res) {
-			// res.json({ authStatus: 1, zipStore: req.session.lastZip });
-			res.json({ authStatus: 1});
+			// res.json({ authStatus: 1, zipStore: req.session.lastZip });			
+			res.json({ authStatus: 1, displayName: req.user.displayName});
 		});
 	/*********************************************/
 	var booksHandler = new BooksHandler();
@@ -87,7 +87,9 @@ module.exports = function (app, passport) {
 		.get(isLoggedIn, booksHandler.allBooks);		
 
 	app.route('/club')
-		.get(isLoggedIn, booksHandler.ourBooks);		
+		//no login required
+		// .get(isLoggedIn, booksHandler.ourBooks);		
+		.get(booksHandler.ourBooks);		
 		
 	app.route('/my-books')
 		.get(isLoggedIn, booksHandler.myBooks)

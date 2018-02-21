@@ -54,13 +54,15 @@ var ajaxFunctions = {
 				if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
 					callback(null, xmlhttp.response, xmlhttp.status);
 					//remove global statusifier
-					removeIt(xhrTrack);
+					let tracker = document.querySelector("#xhr-track");
+					removeIt(tracker);
 				}
-				else if (xmlhttp.readyState === 4 && xmlhttp.status === 403) {
+				else if (xmlhttp.readyState === 4 && xmlhttp.status !== 200) {
 					//error callback
 					callback(null, xmlhttp.response, xmlhttp.status);
 					//remove global statusifier
-					removeIt(xhrTrack);
+					let tracker = document.querySelector("#xhr-track");
+					removeIt(tracker);
 				}
 			};
 			xmlhttp.open(method, url);

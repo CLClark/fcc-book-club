@@ -3,7 +3,6 @@
 if(process.env.LOCAL !== true){
 	require('dotenv').load();
 }
-
 var express = require('express');
 var routes = require('./app/routes/index.js');
 var session = require('express-session');
@@ -34,7 +33,7 @@ app.use(session({
 	}),
 	secret: process.env.ZOO_COOKIE_SECRET,
 	resave: false,
-	cookie: { maxAge: 2 * 24 * 60 * 60 * 1000 }, // 2 days
+	cookie: { maxAge: 1* 24 * 60 * 60 * 1000 }, // 2 days
 	saveUninitialized: false
 }));
 

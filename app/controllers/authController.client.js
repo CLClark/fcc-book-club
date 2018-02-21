@@ -220,6 +220,10 @@ var AUTHLIB = AUTHLIB || (function () {
 				if (authObj.authStatus == 1) {
 					//"login-nav" div (profile | sign out)
 					authNode.replaceWith(makeDiv()); 
+					let dName = document.querySelector("#display-name");
+					if(dName !== null){
+						dName.innerHTML = (", " + authObj.displayName);
+					}
 					/* 	if (document.querySelector("#appts-img") == null) {
 						document.querySelector("#profile-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
 					}*/
@@ -232,13 +236,15 @@ var AUTHLIB = AUTHLIB || (function () {
 					navi.appendChild(makeMyTrades());
 					//add listener
 					var tradesBtn = document.querySelector("#my-trades");
-					tradesBtn.addEventListener("click",myTradesFn, false);
-					//TODO: addBooksDiiv
+					tradesBtn.addEventListener("click", myTradesFn, false);
+					//search book club
+					navi.appendChild(makeSearchClub());
+					var clubBtn = document.querySelector("#search-club");
+					clubBtn.addEventListener("click", searchClub, false);
+					//add Books
 					navi.appendChild(makeAddBooks());
-					//add listener
 					var addsBtn = document.querySelector("#add-books");
-					addsBtn.addEventListener("click",addBooks, false);
-					// apptFind();
+					addsBtn.addEventListener("click", addBooks, false);
 				}
 				//if user is not authenticated
 				else {
@@ -262,10 +268,10 @@ var AUTHLIB = AUTHLIB || (function () {
 				newDiv.id = "my-books";
 				newDiv.className = "navicon";
 				let aPro1 = document.createElement("a");
-				aPro1.className = "btn";
+				aPro1.className = "tab";
 				//href not used, event listener instead
 				// aPro1.href = "/my-books";
-				aPro1.innerHTML = "my Books";
+				aPro1.innerHTML = "My Books";
 				newDiv.appendChild(aPro1);
 				return newDiv;
 			}//makeMyBooks
@@ -274,10 +280,10 @@ var AUTHLIB = AUTHLIB || (function () {
 				newDiv.id = "my-trades";
 				newDiv.className = "navicon";
 				let aPro1 = document.createElement("a");
-				aPro1.className = "btn";
+				aPro1.className = "tab";
 				//href not used, event listener instead
 				// aPro1.href = "/my-trades";
-				aPro1.innerHTML = "my Trades";
+				aPro1.innerHTML = "My Trades";
 				newDiv.appendChild(aPro1);
 				return newDiv;				
 			}//makeMyTrades
@@ -285,10 +291,16 @@ var AUTHLIB = AUTHLIB || (function () {
 			function myBooksFn (){
 				//2. query node for user books
 				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
-					//1. declare results div			
-					//3. display books as results
+					if(err){console.log(err)}
+					else{
+						var booksFound = JSON.parse(data);
+						// console.log(booksFound);
+						divCB(booksFound, 'poll-view', {classText: "owned-book"}, null);						
+					}					
+					//1. declare results div
+					//3. display books as results					
 					//4. display corollary divs+functions (delete, add, etc)
-					process(data);
+					// console.log(data);
 				}));//ajax call				
 			}
 			function myTradesFn(){
@@ -297,31 +309,59 @@ var AUTHLIB = AUTHLIB || (function () {
 					//3. display books as results
 					//4. display corollary divs+functions (delete, add, etc)
 					process(data);
+
 				}));//ajax call	
 			}//myTradesFn
-
 			function makeAddBooks(){
 				let newDiv = document.createElement("div");
 				newDiv.id = "add-books";
 				newDiv.className = "navicon";
 				let aPro1 = document.createElement("a");
-				aPro1.className = "btn";
+				aPro1.className = "tab";
 				//href not used, event listener instead
 				// aPro1.href = "/my-trades";
-				aPro1.innerHTML = "add Books";
+				aPro1.innerHTML = "Add Your <br> Book";
 				newDiv.appendChild(aPro1);
 				return newDiv;				
 			}//makeAddBooks
 			function addBooks(){
+				//hide all unused search bars:
+				let allBars = document.querySelectorAll(".sbar");
+				allBars.forEach((searchBar) => {
+					searchBar.setAttribute("style","display: none");
+				});
+				//show our bar:
+				document.querySelector("#gipSearch").setAttribute("style","display: unset");
 				//1. replace search bar with "google api search"
 				//2. add google search
 				//3. form results with listeners(or hrefs) = > server handle add books
-				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
+				// ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
 					//1. declare results div			
 					//3. display books as results
 					//4. display corollary divs+functions (delete, add, etc)
-					process(data);
-				}));//ajax call				
+					// process(data);
+				// }));//ajax call				
+			}
+			function makeSearchClub(){
+				let newDiv = document.createElement("div");
+				newDiv.id = "search-club";
+				newDiv.className = "navicon";
+				let aPro1 = document.createElement("a");
+				aPro1.className = "tab";
+				//href not used, event listener instead				
+				aPro1.innerHTML = "Search our <br> Books";
+				newDiv.appendChild(aPro1);
+				return newDiv;				
+			}//makeSearchClub
+
+			function searchClub(){
+				//hide all unused bars:
+				let allBars = document.querySelectorAll(".sbar");
+				allBars.forEach((searchBar) => {
+					searchBar.setAttribute("style","display: none");
+				});
+				//show our bar:
+				document.querySelector("#zipSearch").setAttribute("style","display: unset");		
 			}
 
 			/**			 

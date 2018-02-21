@@ -22,6 +22,7 @@ body {
 	margin: 0;
 	padding: 0;
 	background-color: #FFFFA5;
+	background-image: url('/public/img/bgpaper.gif');
 }
 
 header {
@@ -76,38 +77,36 @@ header a ~ p {
 	font-weight: 400;
 }
 
+#navi-container{
+	background-color: ghostwhite;
+	border-color: black;
+	border-width: 1px;
+	border-style: none none dashed none;
+}
+
 #navi{
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
-/* 	background-color: #e6e6e6; */
 /*   padding: 10px 0 0 10px; */
-  padding: 4px;
-  border-style: solid;
-border-width: thin;
-border-color: blue;
+  padding: 4px 4px 0 4px;
+  /* border-style: solid;
+	border-width: thin;
+	border-color: blue; */
 }
 /* 
 #api-icon{
 }
-#home-icon{  
-}
  */
-.navicon{
-  height: auto;
-  flex: 1;
-  border-width: medium;
-  border-color: blue;
-  border-style: inset;
-  text-align: center;
-}
+
+
 
 #welcome-container{
 	/* padding-left: 14px; */
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	justify-content: center;
-	flex: 4;
+	flex: 2;
 	/* padding-right: 20%; */
 }
 
@@ -279,27 +278,27 @@ n
 
 /****** Profile Styling ******/
 
-.github-profile {
+.club-profile {
 	/*width: 350px;*/
 	width: 100%;
 	height: 100%;
 	border-radius: 3px;
 /*	margin: 86px auto 0 auto;*/
 	padding: 10px;
-	background-color: #e6e6e6;
+	background-color: #ffffff50;
 	text-align: center;
 	color: #000;
 }
 
-.github-profile p:first-child {
+.club-profile p:first-child {
 	padding-top: 16px;
 }
 
-.github-profile p:nth-child(10) {
+.club-profile p:nth-child(10) {
 	margin-bottom: 16px
 }
 
-.github-profile p {
+.club-profile p {
 	margin: 0 0 0 16px;
 	text-align: left;
 }
@@ -312,16 +311,16 @@ span {
 	font-weight: 500;
 }
 
-.github-profile > img {
+.club-profile > img {
 	padding-top: 16px;
 	margin-bottom: 16px;
 }
 
-.github-profile .menu:hover {
+.club-profile .menu:hover {
 	color: #FFA000;
 }
 
-.github-profile .menu:active {
+.club-profile .menu:active {
 	color: #FF630D;
 }
 
@@ -343,9 +342,66 @@ span {
 
 .center-bar{
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
   align-items: center;
-  margin: 0 0 10px 0;
+  margin: 3px 1% 0 1%;
+}
+
+.navicon{
+  min-height: 3em;
+	flex: 1;
+	margin:  0 2px;
+  /* border-width: medium;
+  border-color: blue;
+  border-style: inset; */
+	text-align: center;
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+	background-position: center bottom;
+	background-image: url("/public/img/tab-red.png");	
+	display: flex;
+    flex-direction: column;
+    justify-content: space-around;	
+}
+.navicon:hover{
+	background-image: url("/public/img/tab-blue.png");	
+}
+#home-icon{  
+	background-image: url("/public/img/bookslogo.png");
+	background-size: cover;
+	background-repeat: no-repeat;
+	width: 60px;
+	height: 40px;
+	background-position: center center;
+}
+
+.tab {	/* Styling for buttons */	
+	color: white;
+	/* background-color: #acacff; */
+	display: inline-block;	
+	font-size: large;
+	border-radius: 3px;	
+	font-weight: 500;
+	cursor:pointer;
+	padding: 5px;
+	height:auto;
+}
+/* 
+.tab:hover {
+	font-weight:bold;
+}
+ */
+#searchResults{	
+	display:none;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position-x: left;
+	width: 100px;
+    padding: 10px 3px 6px 3px;
+    margin: 5px 0 0 5px;
+    color: darkgray;
+    font-size: smaller;
+    text-align: center
 }
 
 #clockface {

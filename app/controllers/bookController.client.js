@@ -24,7 +24,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 			document.querySelector('input#zipSearch').addEventListener("keypress", function (e) {
 				var key = e.which || e.keyCode;
 				var i = document.querySelector('#zipSearch').value;
-				if (key === 13) { // 13 is enter
+				if (key === 13) { // 13 is enter					
 					// code for enter
 					console.log("fired input: " + i);
 					let userInput = i.toUpperCase();
@@ -34,6 +34,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 						document.querySelector('#poll-view').dispatchEvent(yelper);
 						//execute the GET
 						bookFind(userInput);
+						document.querySelector('#zipSearch').value = "";
 					// }
 				}				
 
@@ -47,12 +48,14 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				*/
 					var request = ('/club/?terms=' + searchValue);// + "&timeframe=" + timeFrame.toISOString());
 					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, 7000, function (err, data, status) {
-						document.querySelector('#poll-view').innerHTML = "";
-						var booksFound = JSON.parse(data);
-						console.log(booksFound);
-
-						functionCB(booksFound, 'poll-view', null, null);
-
+						if(err){console.log("request error")
+					} else{
+							document.querySelector('#poll-view').innerHTML = "";
+							var booksFound = JSON.parse(data);
+							console.log(booksFound);
+	
+							functionCB(booksFound, 'poll-view', null, null);	
+						}
 					/* 
 						//barFormer callback
 						functionCB(barsFound, 'poll-view', null, null);
@@ -73,7 +76,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					this.innerHTML = "now finding, Please hold...";
 				}, false);
 			}
-
+			document.querySelector('#gipSearch').setAttribute("style", "display: none");
 			document.querySelector('input#gipSearch').addEventListener("keypress", function (e) {
 				var key = e.which || e.keyCode;				
 				var i = document.querySelector('#gipSearch').value;
@@ -85,6 +88,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					document.querySelector('#poll-view').dispatchEvent(yelper);
 					//execute the GET
 					bookFind(userInput);
+					document.querySelector('#gipSearch').value = "";
 				}				
 				var reg = new RegExp('^\S{0,50}$'); //search term less than 50				
 				// if (reg.test(i)) {					
@@ -103,21 +107,26 @@ var MYLIBRARY = MYLIBRARY || (function () {
 						var booksFound = JSON.parse(data);
 						console.log(booksFound);
 
-						functionCB(booksFound, 'poll-view', null, null);
+						functionCB(booksFound, 'poll-view', {controls: "add"}, null);
 					}));
-				};
+				};				
 			});
 		},
 
 		//HTML DOM handler
 		bookFormer: function (jsonData, parentIdString, optionsBF, cb) {
+			/****** Reset Poll List*/
+			// var yelper = new Event('bookApi');
+			// Listen for the event.
+			// document.querySelector('#poll-view').dispatchEvent(yelper);			
+			/****** */
 			var resultsView = document.getElementById(parentIdString);  //ul		
 			if (resultsView.hasChildNodes()) {
-				//clears the existing...
-				// while (pollView.firstChild) {
-				// 	pollView.removeChild(pollView.firstChild);
-				// }
-			}
+					//clears the existing...
+					while (resultsView.firstChild) {
+						resultsView.removeChild(resultsView.firstChild);
+					}
+			} 
 			if(jsonData == null){ return;}
 			//loop through json array, call HTML builder
 			for (var i = 0; i < jsonData.length; i++) {
@@ -135,6 +144,10 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					resultsView.insertBefore(lastChild, resultsView.childNodes[0]);
 				} */
 			}
+			// if(typeof cb == "function"){
+			// 	cb();
+			// 	console.log("fired function");
+			// }			
 			/**
 			 * 
 			 * @param {String} divName 
@@ -142,7 +155,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 			 * @param {JSON obj} polljone 
 			 * @param {Object} options 
 			 */
-			function addElement(divName, parent, polljone, options) {
+			function addElement(divName, parent, polljone, options, callb) {
 				//parse a copy of the json data
 				var pollCopy = JSON.parse(JSON.stringify(polljone));
 		//var pollChoices = pollCopy.pollData;		
@@ -164,9 +177,9 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				titleA.innerHTML = polljone.title;
 				// titleA.href = (pollCopy["url"]);				
 				titleDiv.appendChild(titleA);				
-				var addlink = '/my-books?isbn=' + polljone.isbn13;
-				titleDiv.setAttribute("addlink",addlink);
-				
+			
+			/*	var addlink = '/my-books?isbn=' + polljone.isbn13;
+				titleDiv.setAttribute("addlink",addlink);				
 				titleDiv.addEventListener("click", addmine.bind(titleDiv), false);
 				function addmine(){	
 					let postlink = this.getAttribute("addlink");
@@ -176,7 +189,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 							console.log(data);
 						}
 					}));					
-				}				
+			} */				
 				newWrapInfo.appendChild(titleDiv);
 
 				//polljone.count div 
@@ -215,7 +228,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				//object data
 				newDiv.setAttribute("poll-key", polljone.id);
 				newDiv.setAttribute("poll-title", polljone.title);
-				newDiv.setAttribute("poll-data", JSON.stringify(polljone.pollData));
+				newDiv.setAttribute("book-data", polljone["json_string"]);
 
 				// newDiv.innerHTML = JSON.stringify(polljone);
 				detailer(newDiv, polljone);
@@ -228,7 +241,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 
 					let isbn = document.createElement("li");
 					isbn.id = "isbn-details";
-					isbn.innerHTML = ("ISBN13: " + jsondata.isbn13);
+					isbn.innerHTML = ("ISBN/ID: " + jsondata.isbn13);
 
 					let pages = document.createElement("li");
 					pages.id = "pages-details";
@@ -309,16 +322,53 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				}
 
 				//optionally add the  "show-text" div		
-				// if (options == null) {
-				// 	showTextMaker(false)
-				// 		.then(res => newWrap.appendChild(res))
-				// 		.catch(e => console.log(e));
-				// 	parent.appendChild(newWrapSup);
-				// } else {
-					//optionally differentiate by className
-				// newWrapSup.className = newWrapSup.className + options.classText;
-					//append sup to DOCUMENT					
-					if (parent.hasChildNodes()) {
+				if (options !== null) {
+					if (options.controls == "add") {
+						addControls();
+					}
+					//add navigation buttons to book results
+					function addControls() {
+						let info = JSON.parse(polljone["json_string"]);						
+						if(info.hasOwnProperty("volumeInfo")){
+							let idArr = info["volumeInfo"];
+							let indArr = Array.from(idArr["industryIdentifiers"]);
+							let single = indArr.filter((ident) => 
+								ident.type == "ISBN_13"
+							);
+							console.log(single);
+							let addLink;
+							if (single.length > 0) {
+								addLink = ('/my-books?isbn=' + single[0]["identifier"]);
+							}//identifier true	
+							else {
+								addLink = ('/my-books?isbn=' + info.id);
+							}
+							let addButton = document.createElement("div");
+							addButton.className = "btn";
+							addButton.innerHTML = "Add to Your Collection?";
+							addButton.addEventListener("click", addAction.bind(addButton), {once: true});	
+							//append to DOM
+							newDiv.appendChild(addButton);
+							//add function, query node
+							function addAction() {
+								let bound = this;
+								ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', addLink, 8000, function (err, data, status) {
+									if (err) { console.log(err); bound.innerHTML = "Error";	 }
+									else {
+										//handle the server response
+										bound.setAttribute("style","background-color:green;");
+										bound.innerHTML = "Added";										
+										// console.log(data);
+									}
+								}));
+							}//addAction							
+						}//has volumeInfo						
+					}//addControls fn
+					newWrapSup.className = newWrapSup.className + " " + options.classText;
+				}
+			
+			//append sup to DOCUMENT					
+			if (parent.hasChildNodes()) {
 						let firstNode = parent.childNodes[0];
 						parent.insertBefore(newWrapSup, firstNode);
 					} else {
@@ -326,8 +376,8 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					}
 				// }
 				//try the callback
-				if (cb !== null) {
-					try { cb(); } catch (TypeError) { console.log("no cb provided"); }
+				if (callb !== null) {
+					try { callb(); } catch (TypeError) { console.log("no cb provided"); }
 				}
 			} //add element
 		}//barFormer
