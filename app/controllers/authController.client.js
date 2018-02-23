@@ -222,8 +222,9 @@ var AUTHLIB = AUTHLIB || (function () {
 					authNode.replaceWith(makeDiv()); 
 					let dName = document.querySelector("#display-name");
 					if(dName !== null){
-						dName.innerHTML = (", " + authObj.displayName);
+						dName.innerHTML = (", <br>" + authObj.displayName);
 					}
+					descriptUser(authObj);
 					/* 	if (document.querySelector("#appts-img") == null) {
 						document.querySelector("#profile-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
 					}*/
@@ -261,6 +262,26 @@ var AUTHLIB = AUTHLIB || (function () {
 					loader(false);
 				}//authObj.authStatus else
 			}));
+			
+			//fills in the profile data
+			function descriptUser(userData){
+				let profId = document.querySelector("#profile-id");
+				let profUser = document.querySelector("#profile-username");
+				let profCity = document.querySelector("#profile-city");
+				let profState = document.querySelector("#profile-state");
+				if(profId !== null){
+					profId.innerHTML = (userData.userId);
+				}
+				if(profUser !== null){
+					profUser.innerHTML = (userData.displayName);
+				}
+				if(profCity !== null){
+					profCity.innerHTML = (userData.city);
+				}
+				if(profState !== null){
+					profState.innerHTML = (userData.state);
+				}
+			}
 
 			function makeMyBooks(){
 				//<div id="api-icon" class="navicon">API ICON</div>
@@ -291,9 +312,13 @@ var AUTHLIB = AUTHLIB || (function () {
 			function myBooksFn (){
 				//2. query node for user books
 				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
+					var booksFound = JSON.parse(data);
 					if(err){console.log(err)}
-					else{
-						var booksFound = JSON.parse(data);
+					else if(booksFound["booksFound"] == "none"){
+						let place = document.querySelector("#poll-view");
+						place.innerHTML = "No books found.";
+					}
+					else{						
 						// console.log(booksFound);
 						divCB(booksFound, 'poll-view', {classText: "owned-book"}, null);						
 					}					

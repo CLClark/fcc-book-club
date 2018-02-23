@@ -66,30 +66,40 @@ module.exports = function (app, passport) {
 */
 	/*********************************************/
 	app.route('/auth/facebook')
-		.get(passport.authenticate('facebook'));
-	//	{ scope: [ 'public_profile' ]}
+		.get(passport.authenticate('facebook'));//, {
+			// scope: [ 'public_profile' ] //, 'user_location' ]
+		// }));
 
 	app.route('/auth/facebook/callback')
 		.get(passport.authenticate('facebook', {
 			successRedirect: '/',
-			failureRedirect: '/login'
-			// ,failureFlash: true
+			failureRedirect: '/login'			
 		}));
 
 	app.route('/auth/check')
 		.get(isAuthed, function (req, res) {
 			// res.json({ authStatus: 1, zipStore: req.session.lastZip });			
-			res.json({ authStatus: 1, displayName: req.user.displayName});
+			res.json({
+				authStatus: 1,
+				userId: req.user.id,
+				displayName: req.user.displayName,
+				city: req.user.city,
+				state:  req.user.state
+			});
 		});
 	/*********************************************/
 	var booksHandler = new BooksHandler();
+	var userHandler = new UserHandler();
+	
 	app.route('/books')
 		.get(isLoggedIn, booksHandler.allBooks);		
 
 	app.route('/club')
 		//no login required
 		// .get(isLoggedIn, booksHandler.ourBooks);		
-		.get(booksHandler.ourBooks);		
+		.get(booksHandler.ourBooks)
+		//handle profile updates		
+		.post(isLoggedIn, userHandler.updateProfile)
 		
 	app.route('/my-books')
 		.get(isLoggedIn, booksHandler.myBooks)

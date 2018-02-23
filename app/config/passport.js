@@ -18,7 +18,7 @@ module.exports = function (passport) {
 	passport.deserializeUser(function (id, done) {
 		var pool = new pg.Pool(config);
 
-		const text = 'SELECT * FROM users WHERE id = $1';
+		const text = 'SELECT * FROM users WHERE id = $1'; //(id, \"displayName\", gender, locations, city, state)
 		const values = [];
 		values.push(id);
 
@@ -34,7 +34,14 @@ module.exports = function (passport) {
 						return done(err, null);
 					} else {
 						//format deserialized user
-						var user = { id: result.rows[0].id, displayName: result.rows[0].displayName };
+						var user = {
+							id: result.rows[0].id,
+							displayName: result.rows[0].displayName,
+							gender: result.rows[0].gender,
+							locations: result.rows[0].locations,
+							city: result.rows[0].city,
+							state: result.rows[0].state
+						};
 						return done(err, user);
 					}
 				});
@@ -54,10 +61,11 @@ module.exports = function (passport) {
 			process.nextTick(function () {
 				var pool = new pg.Pool(config);
 
-				const text = 'SELECT * FROM users WHERE id = $1';
+				const text = 'SELECT * FROM users WHERE id = $1'; //(id, \"displayName\", gender, locations, city, state)
 				const values = [];
 				const userId = profile.id;
 				values.push(userId);
+				// console.log(profile); //testing
 
 				pool.connect()
 					.then(client => {
@@ -68,18 +76,24 @@ module.exports = function (passport) {
 							}
 							if (result.rowCount == 0) {
 								// create a new user
-								const insertText = 'INSERT INTO users(id, \"displayName\", gender, locations) VALUES($1, $2, $3, $4) RETURNING *';
+								const insertText = 'INSERT INTO users(id, \"displayName\", gender, locations, city, state) VALUES($1, $2, $3, $4, $5, $6) RETURNING *';
 								const insertValues = [];
 								insertValues.push(userId); //id
 								if (profile.displayName) { //displayName
 									insertValues.push(profile.displayName);
-								} else { insertValues.push('null'); }
+								} else { insertValues.push(""); }
 								if (profile.gender) { //gender
 									insertValues.push(profile.gender);
-								} else { insertValues.push('null'); }
+								} else { insertValues.push(""); }
+								// if (profile.city) { //gender
+								// 	insertValues.push(profile.city);
+								// } else { insertValues.push('null'); }
+								// if (profile.state) { //gender
+								// 	insertValues.push(profile.state);
+								// } else { insertValues.push('null'); }
 								do {
-									insertValues.push('{null}'); //ensure length
-								} while (insertValues.length < 4);
+									insertValues.push(""); //ensure length
+								} while (insertValues.length < 6);
 
 								//new postgresql connection
 								var pool2 = new pg.Pool(config);
@@ -93,7 +107,14 @@ module.exports = function (passport) {
 											} else {
 												console.log("inserted 1 user: " + result.rows[0].id);
 												//format user
-												var user = { id: result.rows[0].id, displayName: result.rows[0].displayName };
+												var user = {
+													id: result.rows[0].id,
+													displayName: result.rows[0].displayName,
+													gender: result.rows[0].gender,
+													locations: result.rows[0].locations,
+													city: result.rows[0].city,
+													state: result.rows[0].state
+												}
 
 												return done(err, user);
 											}
@@ -104,9 +125,17 @@ module.exports = function (passport) {
 							}
 							//found existing user in db
 							else if (result.rowCount == 1) {
+								console.log(result);
 								console.log("found user in db: " + result.rows[0].id);
 								//format user
-								var user = { id: result.rows[0].id, displayName: result.rows[0].displayName };
+								var user = {
+									id: result.rows[0].id,
+									displayName: result.rows[0].displayName,
+									gender: result.rows[0].gender,
+									locations: result.rows[0].locations,
+									city: result.rows[0].city,
+									state: result.rows[0].state
+								};
 								return done(err, user);
 							}
 						});

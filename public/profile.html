@@ -50,23 +50,57 @@
 	<input type="text" id="gipSearch" name="q" class="sbar" placeholder="Search with Google Books API">
 </div>
 <div class="container">
-	<div class="club-profile">
-		<div class="club-profile-interface">
-			<!--<img src="/public/img/gh-mark-32px.png" alt="github logo" />-->
-			<p><span>ID: </span><span id="profile-id" class="profile-value"></span></p>
-			<p><span>Display Name: </span><span id="profile-username" class="profile-value"></span></p>
-			<p><span>City: </span><span id="profile-username" class="profile-value"></span></p>
-			<p><span>State: </span><span id="profile-username" class="profile-value"></span></p>
-			<br>	
-			<p><span>My Book Club:</span></p>		
-			<p><span>Active Trades: </span><span id="active-poll-count" class="profile-value"></span></p>			
-			<p><span>Books Owned: </span><span id="votes-count" class="profile-value"></span></p>
-			<p><span>Books Traded: </span><span id="voters-count" class="profile-value"></span></p>
-			<br>
-			<div class="poll-profile-control" id="poll-profile-control"></div>
+<div class="club-profile">
+	<div class="club-profile-interface">
+				    
+		<form id="frm1" action="/action_page" method="post">
+		<div class="wrap">
+			<div class="cell description">ID: </div>
+			<div id="profile-id" class="cell profile-value"></div>
+			<div id="userid-dummy" class="cell formspace">
+				<input type="submit" value="Update?">
+				<!-- <input onclick="myFunction()" value="Update?" type="button"> -->
+			</div>
 		</div>
-	</div>
-</div>		
+		<div class="wrap">
+			<div class="cell description">Display Name: </div>
+			<div id="profile-username" class="cell profile-value"></div>
+			<div class="cell formspace">
+				<input type="profile-text" name="pname" placeholder="update display name...">
+			</div>
+		</div>
+		<div class="wrap">
+			<div class="cell description">City: </div>				
+				<div id="profile-city" class="cell profile-value"></div>
+				<div class="cell formspace"><input type="profile-text" name="pcity" placeholder="update city..."></div>				
+			</div>
+			<div class="wrap">
+				<div class="cell description">State: </div>				
+				<div id="profile-state" class="cell profile-value"></div>
+				<div class="cell formspace"><input type="profile-text" name="pstate" placeholder="update state..."></div>
+			</div>	</form>
+			<div id="club-stats">
+				<p>
+					<span>My Book Club</span>
+				</p>
+				<p>
+					<span>Active Trades: </span>
+					<span id="active-poll-count" class="profile-value"></span>
+				</p>
+				<p>
+					<span>Books Owned: </span>
+					<span id="votes-count" class="profile-value"></span>
+				</p>
+				<p>
+					<span>Books Traded: </span>
+					<span id="voters-count" class="profile-value"></span>
+				</p>
+			</div>
+			<div class="poll-profile-control" id="poll-profile-control"></div>
+			
+			</div>
+</div>
+</div>
 
 <div class="container">
 	<div class="club-profile poll-profile" id="poll-profile">
