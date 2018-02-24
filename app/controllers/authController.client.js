@@ -330,7 +330,7 @@ var AUTHLIB = AUTHLIB || (function () {
 					}
 					else{						
 						// console.log(booksFound);
-						divCB(booksFound, 'poll-view', {classText: "owned-book"}, null);						
+						divCB(booksFound, 'poll-view', {classText: "owned-book", controls: "delete"}, null);						
 					}					
 					//1. declare results div
 					//3. display books as results					

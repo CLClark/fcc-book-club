@@ -30,17 +30,17 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					let userInput = i.toUpperCase();
 					var reg = new RegExp('^\S{0,50}$'); //search term less than 50				
 					// if (reg.test(i)) {
-						
-						//execute the GET
-						bookFind(userInput);
-						
-						//handle gui (tab)						
-						tabColourer("search-club");
-						document.querySelector('#zipSearch').value = "";
-						// Dispatch "results" loading event
-						document.querySelector('#poll-view').dispatchEvent(yelper);
+
+					//execute the GET
+					bookFind(userInput);
+
+					//handle gui (tab)						
+					tabColourer("search-club");
+					document.querySelector('#zipSearch').value = "";
+					// Dispatch "results" loading event
+					document.querySelector('#poll-view').dispatchEvent(yelper);
 					// }
-				}				
+				}
 
 				function bookFind(searchValue) {
 					/*  date not needed in book app
@@ -52,29 +52,30 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					*/
 					var request = ('/club/?terms=' + searchValue);// + "&timeframe=" + timeFrame.toISOString());
 					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, 7000, function (err, data, status) {
-						if(err){console.log("request error")
-					} else{
+						if (err) {
+							console.log("request error")
+						} else {
 							document.querySelector('#poll-view').innerHTML = "";
 							var booksFound = JSON.parse(data);
 							console.log(booksFound);
-	
-							functionCB(booksFound, 'poll-view', null, null);	
+
+							functionCB(booksFound, 'poll-view', null, null);
 						}
-					/* 
-						//barFormer callback
-						functionCB(barsFound, 'poll-view', null, null);
-						passedInFunction();
-						//					formerCB();
-					*/
+						/* 
+							//barFormer callback
+							functionCB(barsFound, 'poll-view', null, null);
+							passedInFunction();
+							//					formerCB();
+						*/
 					}));
 				};
 
-				function tabColourer(selectedTab){
+				function tabColourer(selectedTab) {
 					let tabs = document.querySelectorAll(".navicon");
 					tabs.forEach((thisTab) => {
-						thisTab.setAttribute("style","opacity: .7");
+						thisTab.setAttribute("style", "opacity: .7");
 					});
-					let fullOpacity = document.querySelector( ("#") + selectedTab);
+					let fullOpacity = document.querySelector(("#") + selectedTab);
 					fullOpacity.setAttribute("style", "");
 				}
 			});
@@ -91,12 +92,12 @@ var MYLIBRARY = MYLIBRARY || (function () {
 			}
 			document.querySelector('#gipSearch').setAttribute("style", "display: none");
 			document.querySelector('input#gipSearch').addEventListener("keypress", function (e) {
-				var key = e.which || e.keyCode;				
+				var key = e.which || e.keyCode;
 				var i = document.querySelector('#gipSearch').value;
 				if (key === 13) { // 13 is enter
 					// code for enter
 					console.log("fired input: " + i);
-					let userInput = i.toUpperCase();					
+					let userInput = i.toUpperCase();
 					//execute the GET
 					bookFind(userInput);
 					//handle GUI
@@ -104,7 +105,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					// Dispatch "result space" event.
 					document.querySelector('#poll-view').dispatchEvent(yelper);
 					document.querySelector('#gipSearch').value = "";
-				}				
+				}
 				var reg = new RegExp('^\S{0,50}$'); //search term less than 50				
 				// if (reg.test(i)) {					
 				// }
@@ -122,19 +123,19 @@ var MYLIBRARY = MYLIBRARY || (function () {
 						var booksFound = JSON.parse(data);
 						console.log(booksFound);
 
-						functionCB(booksFound, 'poll-view', {controls: "add"}, null);
+						functionCB(booksFound, 'poll-view', { controls: "add" }, null);
 					}));
 				};
 
 				//duplicate code
-				function tabColourer(selectedTab){
+				function tabColourer(selectedTab) {
 					let tabs = document.querySelectorAll(".navicon");
 					tabs.forEach((thisTab) => {
-						thisTab.setAttribute("style","opacity: .7");
+						thisTab.setAttribute("style", "opacity: .7");
 					});
-					let fullOpacity = document.querySelector( ("#") + selectedTab);
+					let fullOpacity = document.querySelector(("#") + selectedTab);
 					fullOpacity.setAttribute("style", "");
-				}				
+				}
 			});
 		},
 
@@ -147,12 +148,12 @@ var MYLIBRARY = MYLIBRARY || (function () {
 			/****** */
 			var resultsView = document.getElementById(parentIdString);  //ul		
 			if (resultsView.hasChildNodes()) {
-					//clears the existing...
-					while (resultsView.firstChild) {
-						resultsView.removeChild(resultsView.firstChild);
-					}
-			} 
-			if(jsonData == null){ return;}
+				//clears the existing...
+				while (resultsView.firstChild) {
+					resultsView.removeChild(resultsView.firstChild);
+				}
+			}
+			if (jsonData == null) { return; }
 			//loop through json array, call HTML builder
 			for (var i = 0; i < jsonData.length; i++) {
 				//create a div for each poll
@@ -183,7 +184,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 			function addElement(divName, parent, polljone, options, callb) {
 				//parse a copy of the json data
 				var pollCopy = JSON.parse(JSON.stringify(polljone));
-		//var pollChoices = pollCopy.pollData;		
+				//var pollChoices = pollCopy.pollData;		
 
 				//div wrapper for entire object
 				var newWrapSup = document.createElement("div");
@@ -201,20 +202,20 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				titleA.className = "poll-title";
 				titleA.innerHTML = polljone.title;
 				// titleA.href = (pollCopy["url"]);				
-				titleDiv.appendChild(titleA);				
-			
-			/*	var addlink = '/my-books?isbn=' + polljone.isbn13;
-				titleDiv.setAttribute("addlink",addlink);				
-				titleDiv.addEventListener("click", addmine.bind(titleDiv), false);
-				function addmine(){	
-					let postlink = this.getAttribute("addlink");
-					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', postlink, 8000, function (err, data, status) {
-						if(err){console.log(err)}
-						else{
-							console.log(data);
-						}
-					}));					
-			} */				
+				titleDiv.appendChild(titleA);
+
+				/*	var addlink = '/my-books?isbn=' + polljone.isbn13;
+					titleDiv.setAttribute("addlink",addlink);				
+					titleDiv.addEventListener("click", addmine.bind(titleDiv), false);
+					function addmine(){	
+						let postlink = this.getAttribute("addlink");
+						ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', postlink, 8000, function (err, data, status) {
+							if(err){console.log(err)}
+							else{
+								console.log(data);
+							}
+						}));					
+				} */
 				newWrapInfo.appendChild(titleDiv);
 
 				//polljone.count div 
@@ -223,7 +224,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				if (polljone.count >= 0) {
 					countDiv.innerHTML = polljone.count + " GOING";
 					newWrapInfo.appendChild(countDiv);
-				} 
+				}
 
 				//poll-wrap
 				var newWrap = document.createElement("div");
@@ -259,7 +260,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				detailer(newDiv, polljone);
 
 				//pass in parent, adds details for each
-				function detailer(parent, jsondata){
+				function detailer(parent, jsondata) {
 					let authors = document.createElement("li");
 					authors.id = "authors-details";
 					authors.innerHTML = ("Authors: " + jsondata.authors);
@@ -271,7 +272,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					let pages = document.createElement("li");
 					pages.id = "pages-details";
 					pages.innerHTML = ("Pages: " + jsondata.pages);
-					
+
 					parent.appendChild(authors);
 					parent.appendChild(isbn);
 					parent.appendChild(pages);
@@ -348,76 +349,82 @@ var MYLIBRARY = MYLIBRARY || (function () {
 
 				//optionally add the  "show-text" div		
 				if (options !== null) {
-					if (options.controls == "add") {
+					if (options.controls) {
 						//pass in (option): which button type to append? add, delete, ...
 						addControls(options.controls);
 					}
 					//add navigation buttons to book results
 					function addControls(controlType) {
-						let info = JSON.parse(polljone["json_string"]);						
-						if(info.hasOwnProperty("volumeInfo")){
-							let idArr = info["volumeInfo"];
-							let indArr = Array.from(idArr["industryIdentifiers"]);
-							let single = indArr.filter((ident) => 
-								ident.type == "ISBN_13"
-							);
-							console.log(single);
-							let addLink;
-							if (single.length > 0) {
-								addLink = ('/my-books?isbn=' + single[0]["identifier"]);
-							}//identifier true	
-							else {
-								addLink = ('/my-books?isbn=' + info.id);
-							}
-							let addButton = document.createElement("div");
-							addButton.className = "btn";
-							if(controlType == "add"){
-								addButton.innerHTML = "Add to Your Collection?";
-								addButton.addEventListener("click", addAction.bind(addButton), {once: true});	
-							}
-							else if(controlType == "delete"){
-								addButton.innerHTML = "Remove from Your Collection?";
-								addButton.addEventListener("click", delAction.bind(addButton), {once: true});	
-							}							
-							//append to DOM
-							newDiv.appendChild(addButton);
-							//add function, query node
-							function addAction() {
+						let info = JSON.parse(polljone["json_string"]);
+						let single = [];
+						if (info.hasOwnProperty("id")) {
+							single.push(info.id);
+						}
+						let addLink;
+						
+						if (single.length > 0) {
+							addLink = ('/my-books?volume=' + single[0]);							
+						}//identifier true	
+						else {
+							addLink = ('/my-books?volume=' + polljone.id);
+						}
+						// console.log(addLink); // testing
+						let addButton = document.createElement("div");
+						addButton.className = "btn";
+						if (controlType == "add") {
+							addButton.innerHTML = "Add to Your Collection?";
+							addButton.addEventListener("click", addAction.bind(addButton), { once: true });
+						}
+						else if (controlType == "delete") {							
+							addButton.innerHTML = "Remove from your Collection?";
+							addButton.addEventListener("click", delAction.bind(addButton), { once: true });
+						}
+						//append to DOM
+						newDiv.appendChild(addButton);
+						//add function, query node
+						function addAction() {
+							// if (window.confirm("Add this book to your collection?")) {
 								let bound = this;
+								bound.innerHTML = "Please Wait...";
+								bound.setAttribute("style", "background-color:grey;");
 								ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', addLink, 8000, function (err, data, status) {
-									if (err) { console.log(err); bound.innerHTML = "Error";	 }
+									if (err) { console.log(err); bound.innerHTML = "Error"; }
 									else {
 										//handle the server response
-										bound.setAttribute("style","background-color:green;");
-										bound.innerHTML = "Added";										
+										bound.setAttribute("style", "background-color:green;");
+										bound.innerHTML = "Added";
 										// console.log(data);
 									}
 								}));
-							}//addAction	
-							function delAction(){
+							// }//alert box
+						}//addAction	
+						function delAction() {
+							if (window.confirm("This will cancel any pending trades. Confirm book removal?")) {
 								let bound = this;
-								ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', addLink, 8000, function (err, data, status) {
-									if (err) { console.log(err); bound.innerHTML = "Error";	 }
+								bound.innerHTML = "Please Wait...";
+								bound.setAttribute("style", "background-color:grey;");
+								ajaxFunctions.ready(ajaxFunctions.ajaxRequest('DELETE', addLink, 8000, function (err, data, status) {
+									if (err) { console.log(err); bound.innerHTML = "Error"; }
 									else {
 										//handle the server response
-										bound.setAttribute("style","background-color: grey;");
-										bound.innerHTML = "Removed";										
+										bound.setAttribute("style", "background-color: grey;");
+										bound.innerHTML = "Removed";
 										// console.log(data);
 									}
 								}));
-							}//delAction
-						}//has volumeInfo						
+							}//alert box 
+						}//delAction
 					}//addControls fn
 					newWrapSup.className = newWrapSup.className + " " + options.classText;
 				}
-			
-			//append sup to DOCUMENT					
-			if (parent.hasChildNodes()) {
-						let firstNode = parent.childNodes[0];
-						parent.insertBefore(newWrapSup, firstNode);
-					} else {
-						parent.appendChild(newWrapSup);
-					}
+
+				//append sup to DOCUMENT					
+				if (parent.hasChildNodes()) {
+					let firstNode = parent.childNodes[0];
+					parent.insertBefore(newWrapSup, firstNode);
+				} else {
+					parent.appendChild(newWrapSup);
+				}
 				// }
 				//try the callback
 				if (callb !== null) {

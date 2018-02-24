@@ -13,7 +13,7 @@ function BooksHandler() {
 
 	/** */
 	this.allBooks = function (req, res) {
-		console.log('allBooks callback');		
+		console.log('allBooks callback');
 		var searchTerm = req.query.terms;
 		//save to session...
 		req.session.lastSearch = searchTerm;
@@ -34,7 +34,7 @@ function BooksHandler() {
 			port: 443,
 			path: ('/books/v1/volumes?' + queryData),
 			method: 'GET',
-			headers: {				
+			headers: {
 				'user-agent': 'clclarkFCC/1.0',
 				'Accept-Language': 'en-US',
 				'Connection': 'keep-alive'
@@ -55,12 +55,12 @@ function BooksHandler() {
 				try {
 					var resJSON = JSON.parse(Buffer.concat(body1).toString());
 					bookBuilder(resJSON.items, false)
-					.then((result) => {
-						res.json(result);
-					})
-					.catch();					
+						.then((result) => {
+							res.json(result);
+						})
+						.catch();
 					// console.log("all books");
-					 
+
 					// bookBuilder(resJSON.items, false)
 					/*	.then((middleware) => {
 							return bookBuilder2(middleware, req.query.timeframe)//returns an array {yelpid: id, count: number}
@@ -185,113 +185,112 @@ function BooksHandler() {
 		active
 	*/
 	//accepts JSON array of yelp businesses, then outputs JSON for client
-	function bookBuilder(result, opts) {
+	function bookBuilder(result, opts, single) {
 		return new Promise((resolve, reject) => {
 			console.log("bookBuilder callback");
 
-			if (!Array.isArray(result)) {
+			if (!Array.isArray(result) && single == false) {
 				console.log(result);
 				reject("input not an array");
-			} else {				
+			} else {
+				//array not expected, insert single obj into array
+				let tmpArray = []
+				if (single == true) {
+					//insert single object into array space
+					tmpArray.push(result);
+				} else {
+					//use original array as tmpArray
+					tmpArray = result;
+				}
 				var aggregator = [];
 				var currentBook = ""; var currentPIndex = -1;
 				var totalVotes = 0;
 				var vRay = [];
-				/* for (var i = 0; i < result.length; i++) {
-					var bookId = result[i].id || "";
-					let book = result[i];
-					if (currentBook !== bookId) {
-						currentBook = bookId;
-						// try{
-							let bookTitle = book.title || book.volumeInfo.title;
-							let bookAuthors = book.authors || book.volumeInfo.authors;
-							let bookPublishedDate = book.publisheddate || book.volumeInfo.publisheddate;
-							let bookIsbn13 = book.isbn13 || book.volumeInfo.industryIdentifiers[1].identifier;
-							let bookPages = book.pages || book.volumeInfo.pageCount;
-							let bookImageUrl = book["image_url"] || book.volumeInfo.imageLinks.thumbnail;
-							let bookLanguage = book.language || book.volumeInfo.language;
-							let bookUrl = book.url || book.volumeInfo.infoLink;
 
-							aggregator.push({
-								id: bookIsbn13, //id as isbn13
-								title: bookTitle,
-								authors: bookAuthors,
-								publishedDate: bookPublishedDate,
-								isbn13: bookIsbn13,
-								pages: bookPages,							
-								image_url: bookImageUrl,
-								language: bookLanguage,
-								url: bookUrl						
-							});
-						// } catch (error) {							
-						// }
-						if (opts) {
-							// let leng = aggregator.length;
-							// aggregator[(leng - 1)]["appt"] = result[i].appt;
-							// delete aggregator[(leng - 1)]["appt"].userid;
-							// delete aggregator[(leng - 1)]["appt"].location;
-							// delete aggregator[(leng - 1)]["appt"].active;
-						}
-					}//if current book
-				}//for loop
- 				*/
 				if (opts) { console.log(opts); }
-				let finalProm = result.map((value, index) => {
-					return new Promise((resolve, reject) => {						
-						let book = value;
-						try{
-						let bookTitle = book.title || book.volumeInfo.title;
-						let bookAuthors = book.authors || book.volumeInfo.authors;
-						let bookPublishedDate = book.publisheddate || book.volumeInfo["publishedDate"];
-						let bookIsbn13;
+				function findISBN(thisBook) {
+					return new Promise((resolv, rejec) => {
 						try {
-							bookIsbn13 = book.isbn13 || book.volumeInfo.industryIdentifiers[1].identifier || "";
-						} catch (e) {	if(e instanceof TypeError)	{ bookIsbn13 = "N/A" }	}						
-						let bookPages = book.pages || book.volumeInfo.pageCount;
-						let bookImageUrl = book["image_url"] || book.volumeInfo.imageLinks.thumbnail;
-						let bookLanguage = book.language || book.volumeInfo.language;
-						let bookUrl = book.url || book.volumeInfo.infoLink;
-						let bookJson = JSON.stringify(book) || "";
-						resolve({
-							id: bookIsbn13, //id as isbn13
-							title: bookTitle,
-							authors: bookAuthors,
-							publishedDate: bookPublishedDate,
-							isbn13: bookIsbn13,
-							pages: bookPages,
-							image_url: bookImageUrl,
-							language: bookLanguage,
-							url: bookUrl,
-							json_string: bookJson
-							})
-						} catch (error) {
-							if (error instanceof TypeError) {
-								//reject the object
-								resolve(false);
-							}
-							else {
-								reject();
-							}
-						}//caught error
+							console.log(thisBook);
+							let single = [];
+							if (thisBook.hasOwnProperty("isbn13")) {
+								resolv((thisBook.isbn13));
+							} else
+								if (thisBook.hasOwnProperty("volumeInfo")) {
+									let idArr = thisBook["volumeInfo"];
+									let indArr = Array.from(idArr["industryIdentifiers"]);
+									single = indArr.filter((ident) =>
+										ident.type == "ISBN_13"
+									);
+									resolv((single[0]["identifier"]));
+								} else
+									if (thisBook.hasOwnProperty("id")) {
+										resolv((thisBook.id));
+									} else {
+										rejec(false);
+									}
+						} catch (e) { if (e instanceof TypeError) { resolv("N/A") } }
+					});
+				}
+				let finalProm = tmpArray.map((value, index) => {
+					return new Promise((resolve, reject) => {
+						//return back to the mapping
+						return findISBN(value)
+						.then((isbnFound) => {
+							console.log("inside return isbn");
+							let book = value;
+							// try {
+								let bookTitle = book.title || book.volumeInfo.title;
+								let bookAuthors = book.authors || book.volumeInfo.authors;
+								let bookPublishedDate = book.publisheddate || book.volumeInfo["publishedDate"];
+								let bookPages = book.pages || book.volumeInfo.pageCount;
+								let bookImageUrl = book["image_url"] || book.volumeInfo.imageLinks.thumbnail;
+								let bookLanguage = book.language || book.volumeInfo.language;
+								let bookUrl = book.url || book.volumeInfo.infoLink;
+								let bookJson = JSON.stringify(book) || "";
+								let bookId = book.volume || book.id || null;
+								resolve({
+									id: bookId, //id as volume id
+									title: bookTitle,
+									authors: bookAuthors,
+									publishedDate: bookPublishedDate,
+									isbn13: isbnFound,
+									pages: bookPages,
+									image_url: bookImageUrl,
+									language: bookLanguage,
+									url: bookUrl,
+									json_string: bookJson
+								})
+							/* } catch (error) {
+								if (error instanceof TypeError) {
+									//reject the object
+									resolve(false);
+								}
+								else {
+									reject(error);
+								}
+							}//caught error */
+
+						}).catch((e) => { console.log(e) });
 					});
 				})
 				Promise.all(finalProm)
-				.then(wholeArray => {
-					return Promise.resolve(
-						wholeArray.filter((v) => v !== false )
-					);
-				})
-				.then((filtered) => {
-					resolve(filtered);
-				})
-				.catch( (e) => {
-					reject(e);	
-				});
+					.then(wholeArray => {
+						return Promise.resolve(
+							wholeArray.filter((v) => v !== false)
+						);
+					})
+					.then((filtered) => {
+						resolve(filtered);
+					})
+					.catch((e) => {
+						reject(e);
+					});
 				// resolve(aggregator);
 			}//passes "array" test
 		});
 	}//bookBuilder
-	
+
 	//accepts JSON array of yelp businesses, then outputs JSON for client
 	//accepts a "time" to refine db query to "relevant" dates
 	function bookBuilder2(result, timeframe) {
@@ -382,39 +381,39 @@ function BooksHandler() {
 			});//return
 		}//apptQMaker
 	}//bookBuilder2
-/*********************** *****************************/
+	/*********************** *****************************/
 	this.ourBooks = function (req, res) {
-		console.log('handler.server.js.ourBooks');		
+		console.log('handler.server.js.ourBooks');
 		var pool = new pg.Pool(config);
 
 		function queryMaker() {
 			return new Promise((resolve, reject) => {
-				const values = [];		
+				const values = [];
 				var terms = req.query.terms;
-				var tsQuery;						
+				var tsQuery;
 
 				//check if query has terms (or not = all results)
-				if(terms.length > 0 && terms.length < 50){
-					console.log("terms found: " + req.query.terms);					
+				if (terms.length > 0 && terms.length < 50) {
+					console.log("terms found: " + req.query.terms);
 					let tsSplit = terms.split(/[ ,]+/);
 					tsQuery = tsSplit.join(" & ");
 					let text = returnText("tsv @@ to_tsquery($1) AND ");
 					// values.push(tsQuery);
-					resolve([	text,	[tsQuery]	]);
+					resolve([text, [tsQuery]]);
 				}
-				else{
+				else {
 					//find all		
-					let text = returnText("");			
-					resolve([text, values]);														
+					let text = returnText("");
+					resolve([text, values]);
 				}
 				function returnText(optQuery) {
 					//SELECT title, authors[1] FROM books WHERE tsv @@ to_tsquery($1);
-					let tmpText  = 'SELECT title, authors, isbn13, publisheddate, image_url, language, url, active, pages ' +
-						' FROM public.books WHERE ' + 
+					let tmpText = 'SELECT title, authors, isbn13, publisheddate, image_url, language, url, active, pages ' +
+						' FROM public.books WHERE ' +
 						optQuery +
 						' NOT public.books.active = false';
 					return tmpText;
-				}			
+				}
 			});
 		}
 
@@ -441,29 +440,29 @@ function BooksHandler() {
 						} else {
 							console.log(JSON.stringify(result));
 							bookBuilder(result.rows, false)
-							.then(builtBooks => {
-								console.log("built books: " + builtBooks);
-								res.json(builtBooks);
-							})
-							.catch(e => { console.log(e + "loopy Loop"); });
-						/* const promiseSerial = funcs =>
-								funcs.reduce((promise, func) =>
-									promise.then(result => func().then(Array.prototype.concat.bind(result))),
-									Promise.resolve([])
-								);
-							// convert each url to a function that returns a promise
-							const funcs = result.rows.filter(rowCheck => rowCheck).map(
-								pgResp => () => yelpSingle(pgResp, null)
-							);
-
-							promiseSerial(funcs)
-								.then(promies => (bookBuilder(promies, true)))
 								.then(builtBooks => {
+									console.log("built books: " + builtBooks);
 									res.json(builtBooks);
-									// console.log("builtBarsVVVV");							
 								})
 								.catch(e => { console.log(e + "loopy Loop"); });
-						*/
+							/* const promiseSerial = funcs =>
+									funcs.reduce((promise, func) =>
+										promise.then(result => func().then(Array.prototype.concat.bind(result))),
+										Promise.resolve([])
+									);
+								// convert each url to a function that returns a promise
+								const funcs = result.rows.filter(rowCheck => rowCheck).map(
+									pgResp => () => yelpSingle(pgResp, null)
+								);
+	
+								promiseSerial(funcs)
+									.then(promies => (bookBuilder(promies, true)))
+									.then(builtBooks => {
+										res.json(builtBooks);
+										// console.log("builtBarsVVVV");							
+									})
+									.catch(e => { console.log(e + "loopy Loop"); });
+							*/
 						}
 					});
 				})
@@ -547,46 +546,46 @@ function BooksHandler() {
 		}//yelpSingle		
 	}//ourBooks
 
-/***************************************** */
+	/***************************************** */
 	this.myBooks = function (req, res) {
 		var pool = new pg.Pool(config);
 		function queryMaker() {
 			return new Promise((resolve, reject) => {
 				//query for only active "true" appointments
-				var text = 'SELECT books.title, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
-				', ownership.bookisbn, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
-				' FROM ownership INNER JOIN books ON ownership.bookisbn = books.isbn13 WHERE ownership.owner = $1 AND NOT ownership.active = false ' + 
-				'';
+				var text = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
+					', ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
+					' FROM ownership INNER JOIN books ON ownership.bookid = books.volume WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
+					'';
 				const values = [];
 				var uid = req.user.id;
 				values.push(uid);
 
 				//check if query has any appts
-			/* 	if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
-					//yes> add each appt and text to the arrays
-					console.log(Array.isArray(req.query.appts) + " : is array check");
-					let cap = req.query.appts.length - 1;
-					var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
-						values.push(cVal);
-						if (cInd < cap) {
-							return acc.concat(('$' + (2 + cInd) + ', '));
-						}
-						else {
-							return acc.concat(('$' + (2 + cInd)));
-						}
-					}, (text.concat(' AND _id NOT IN ('))
-					);
-					resolve([combNots.concat(')'), values]);
-			} */
+				/* 	if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
+						//yes> add each appt and text to the arrays
+						console.log(Array.isArray(req.query.appts) + " : is array check");
+						let cap = req.query.appts.length - 1;
+						var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
+							values.push(cVal);
+							if (cInd < cap) {
+								return acc.concat(('$' + (2 + cInd) + ', '));
+							}
+							else {
+								return acc.concat(('$' + (2 + cInd)));
+							}
+						}, (text.concat(' AND _id NOT IN ('))
+						);
+						resolve([combNots.concat(')'), values]);
+				} */
 				// else {
-					//console.log(Array.isArray(req.query.appts) + " : is array check");
-					//no>return the text/values:
-					resolve([text, values]);
+				//console.log(Array.isArray(req.query.appts) + " : is array check");
+				//no>return the text/values:
+				resolve([text, values]);
 				// }
 			});
 		}
 		//more code here
-						
+
 		queryMaker().then((textArray) => {
 			var text = textArray[0];
 			// console.log(text);	
@@ -649,19 +648,72 @@ function BooksHandler() {
 		});
 
 	}//myBooks
-/***************************************** */
+	/***************************************** */
 	this.addMyBook = function (req, res) {
+		// https://www.googleapis.com/books/v1/volumes/volumeId
+
+		/**CODE FOR FILTERING ISBN
+		 * let info = JSON.parse(polljone["json_string"]);
+						let single = [];
+						if (info.hasOwnProperty("volumeInfo")) {
+							let idArr = info["volumeInfo"];
+							let indArr = Array.from(idArr["industryIdentifiers"]);
+							single = indArr.filter((ident) =>
+								ident.type == "ISBN_13"
+							);
+							// console.log(single); //testing
+							//has volumeInfo
+						} else if (info.hasOwnProperty("id")) {
+							single.push(info.id);
+						}
+						let addLink;
+						//using google volume id (not isbn) TODO: update query client/server
+						if (single.length > 0) {
+							// addLink = ('/my-books?isbn=' + single[0]["identifier"]);
+							addLink = single[0];
+						}//identifier true	
+						else {
+							addLink = ('/my-books?isbn=' + polljone.id);
+						}
+		  * 
+		 */
+
 		console.log('addMyBook callback');
 		var userId = new String(req.user.id).substring(0, 140) || null; //arbitrary cut off
 
-		if (req.query.isbn !== null && req.query.isbn !== "undefined") {
+		var options;
+		var queryData;
+		
+		if(req.query.volume !== null && req.query.volume !== "undefined"){
+			//1 get the book Google ID,
+			var volId = new String(req.query.volume).substring(0, 20) || null;
+			//save to session...
+			req.session.lastSearch = req.query.volume;
+
+			//2 query Google with ID
+			queryData = querystring.escape(volId);
+			console.log(queryData);
+
+			options = {
+				hostname: 'content.googleapis.com',
+				port: 443,
+				path: ('/books/v1/volumes/' + queryData),
+				method: 'GET',
+				headers: {
+					'user-agent': 'clclarkFCC/1.0',
+					'Accept-Language': 'en-US',
+					'Connection': 'keep-alive'
+				}
+			}; //options
+		}// if : volume ID present
+		else if (req.query.isbn !== null && req.query.isbn !== "undefined") {
 			//1 get the book Google ID,
 			var volId = new String(req.query.isbn).substring(0, 17) || null;
 			//save to session...
 			req.session.lastSearch = req.query.isbn;
 
 			//2 query Google with ID
-			const queryData = querystring.stringify({
+			queryData = querystring.stringify({
 				q: ("isbn:" + volId), //q=isbn:1234123412341
 				// orderBy: 'relevance',
 				// printType: 'books',			
@@ -669,8 +721,8 @@ function BooksHandler() {
 				key: process.env.API_KEY
 			});
 			console.log(queryData);
-
-			const options = {
+			
+			options = {
 				hostname: 'content.googleapis.com',
 				port: 443,
 				path: ('/books/v1/volumes?' + queryData),
@@ -680,8 +732,12 @@ function BooksHandler() {
 					'Accept-Language': 'en-US',
 					'Connection': 'keep-alive'
 				}
-			};
+			}; //options
+		}//if
 
+		processAPICallPlusDB();
+
+		function processAPICallPlusDB(){
 			const sreq = https.request(options, (res2) => {
 				var body1 = [];
 				console.log(`STATUS: ${res2.statusCode}`); // console.log(`HEADERS: ${JSON.stringify(res2.headers)}`);			
@@ -689,28 +745,30 @@ function BooksHandler() {
 					body1.push(d);
 					// console.log(d);
 				});
-				res2.on('end', () => { // console.log(body1); // console.log(JSON.parse(Buffer.concat(body1).toString()));
+				res2.on('end', () => { // console.log(body1); 
+					console.log(JSON.parse(Buffer.concat(body1).toString()));
 					try {
 						var resJSON = JSON.parse(Buffer.concat(body1).toString());
-						bookBuilder(resJSON.items, false)
+						bookBuilder(resJSON, false, true) //single object returned from google api, set true
 							.then((result) => {
 								//3 add to database with Google Data: books and ownership tables
-								console.log("bookBuilder result: " + JSON.stringify(result));
-								return insertMyBook(result[0])								
-								.then((insertResult) => {
-									console.log("insert result: " + insertResult)
-									return updateOwnership(req, result[0], true)									
-								})
-								.then((updateRes) => {									
-									res.json(updateRes);									
-								}).catch((e) => {console.log(e);	})
+								// console.log("bookBuilder result: " + JSON.stringify(result));
+								return insertMyBook(result[0])
+									.then((insertResult) => {
+										console.log("insert result: " + insertResult)
+										return updateOwnership(req, result[0], true)
+									})
+									.then((updateRes) => {
+										res.json(updateRes);
+									}).catch((e) => { console.log(e); })
 							})
-							.catch((err) => { console.log(e);	});						
-					} catch (e) { console.error(e); }
+							.catch((err) => { console.log(e); });
+					} catch (e) { console.error(e); res.sendStatus(404); }
 				});
 			});
 			sreq.on('error', (e) => {
 				console.error(`problem with request: ${e.message}`);
+				res.sendStatus(404); 
 			});
 			sreq.end();
 
@@ -719,20 +777,31 @@ function BooksHandler() {
 				// console.log(JSON.stringify(book));
 				return new Promise((resolve, reject) => {
 					const insertText =
-						'INSERT INTO public.books ("title","isbn13","authors","publisheddate","pages","image_url","language","url","active") ' +
-						'VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) ' +
-						' ON CONFLICT ("isbn13")' +
-						'DO NOTHING RETURNING (title,isbn13,authors,publisheddate,pages,image_url,language,url,active)';// RETURNING (title,isbn13,"authors","publisheddate","pages","image_url","language","url","active")';
+						'INSERT INTO public.books ("title", "volume", "isbn13","authors","publisheddate","pages","image_url","language","url","active") ' +
+						'VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ' +
+						' ON CONFLICT ("volume")' +
+						'DO NOTHING RETURNING (title, volume, isbn13,authors,publisheddate,pages,image_url,language,url,active)';// RETURNING (title,isbn13,"authors","publisheddate","pages","image_url","language","url","active")';
 					const insertValues = [];
 					try {
-						insertValues.push(book.title); //id						
-						insertValues.push(book.isbn13);
-						insertValues.push((book.authors));
-						insertValues.push((book["publishedDate"]));
-						insertValues.push((book.pages));
-						insertValues.push((book["image_url"]));
-						insertValues.push((book.language));
-						insertValues.push((book.url));
+						let bt = book.title || "";
+						let bid = book.id;
+						let bisbn = book.isbn13 || "";
+						let bauth = book.authors || "{None}";
+						let bpd = book["publishedDate"] || "";
+						let bpag = book.pages || "";
+						let bimg = book["image_url"] || "";
+						let blang = book.language || "";
+						let burl = book.url || "";					
+
+						insertValues.push(bt);						
+						insertValues.push(bid);
+						insertValues.push(bisbn);
+						insertValues.push((bauth));
+						insertValues.push((bpd));
+						insertValues.push((bpag));
+						insertValues.push((bimg));
+						insertValues.push((blang));
+						insertValues.push((burl));
 						insertValues.push(true);
 						/* do {
 							insertValues.push('{null}'); //ensure length
@@ -753,9 +822,10 @@ function BooksHandler() {
 							// console.log('pg-connected2');
 							client2.query(insertText, insertValues, function (err, result) {
 								client2.release();
-								if (err) {console.log("REJECTED" + err); reject(err);								
-								} else {									
-									console.log("insertBook result: " + JSON.stringify(result));									
+								if (err) {
+									console.log("REJECTED" + err); reject(err);
+								} else {
+									console.log("insertBook result: " + JSON.stringify(result));
 									resolve(result.rows);
 								}//else
 							});//client.query
@@ -764,13 +834,9 @@ function BooksHandler() {
 						.then(() => poolz3.end());
 				});//insertPromise				
 			}//insertMyBook fn
-		}//if
-		else{
-			res.sendStatus(404);
-		}
+		}					
 	}//this.addMyBook
 
-	
 	/**
 	 * access postgres db, provide book data, pg pool, + "add or remove"
 	 * @param {Object} bookData 
@@ -779,64 +845,118 @@ function BooksHandler() {
 	 */
 	function updateOwnership(req, bookData, change) {
 		return new Promise((resolve, reject) => {
-			var insertText;			
+			var insertText;
 			const insertValues = [];
 			let userid = req.user.id;
 			let active;
-			if(change == true){
-			//add operation
+			if (change == true) {
+				//add operation
 				active = change;
 				insertText =
-				//id is generated by postgres; "dateRemoved" not used
-				'INSERT INTO public.ownership ("owner","bookisbn","date_added","active") ' +
-				'VALUES($1, $2, $3, $4) ' +
-				 'RETURNING *';
+					//id is generated by postgres; "dateRemoved" not used
+					'INSERT INTO public.ownership ("owner","bookid","date_added","active") ' +
+					'VALUES($1, $2, $3, $4) ' +
+					'RETURNING *';
 				// 'ON CONFLICT (owner,bookisbn) DO NOTHING'
-			} else if ( change == false ) {
-			//remove operation
+			} else if (change == false) {
+				//remove operation
 				active = change;
 				insertText =
-				//id is generated by postgres; "dateAdded" not used
-				'INSERT INTO public.ownership ("owner","bookisbn","date_removed","active") ' +
-				'VALUES($1, $2, $3, $4) ' +
-				'RETURNING *';
-//				'ON CONFLICT (owner,bookisbn) DO NOTHING RETURNING (bookisbn)'; 
+					//id is generated by postgres; "dateAdded" not used
+					'INSERT INTO public.ownership ("owner","bookid","date_removed","active") ' +
+					'VALUES($1, $2, $3, $4) ' +
+					'RETURNING *';
+				// 'ON CONFLICT (owner,bookisbn) DO NOTHING RETURNING (bookisbn)'; 
 			}
 			if (userid !== null && userid !== undefined) {
 				try {
 					let today = new Date(Date.now());
 					insertValues.push(userid); //owner id
-					insertValues.push(bookData.isbn13); //book id
+					insertValues.push(bookData.id); //book id
 					insertValues.push(today.toISOString()); //dateAdded					
-					insertValues.push(active);					
-					function pushSafe(content) {if (content !== null) {return content;} else {return "null";}
+					insertValues.push(active);
+					function pushSafe(content) {
+						if (content !== null) { return content; } else { return "null"; }
 					}//pushSafe
 				} catch (error) { console.log("ownership try err: " + error); }
 				//new postgresql connection
-				var exPool = new pg.Pool(config);			
+				var exPool = new pg.Pool(config);
 				exPool.connect()
 					.then(client2 => {
 						// console.log('pg-connected2');
 						client2.query(insertText, insertValues, function (err, result) {
 							client2.release();
-							if (err) {	console.log("ownership query err: " + err); reject(err);
+							if (err) {
+								console.log("ownership query err: " + err); reject(err);
 							} else {
 								console.log("ownership result: " + JSON.stringify(result));
 								resolve(result);
 							}//else
 						});//client.query
 					})
-					.then(() => {			exPool.end();					})
+					.then(() => { exPool.end(); })
 					.catch(err => console.error('error connectingZ', err.stack))
-					//end pool in parent function					
+				//end pool in parent function					
 			}
 		});//promise return
 	}//updateOwnership
 	/***************************************** */
 	this.removeMyBook = function (req, res) {
+		console.log('removeMyBook callback');
 		var userId = new String(req.user.id).substring(0, 140) || null; //arbitrary cut off
+
+		if (req.query.isbn !== null && req.query.isbn !== "undefined") {
+			//1 get the book ID
+			var volId = new String(req.query.isbn).substring(0, 20) || null;
+			removeFromDB(volId)
+			.then(() => {
+				res.json({status: "Successful remove"});
+			}).catch((e) => {
+				console.log(e);
+				res.json({status: "Error in removal"});
+			});
+		}
+
+		//TODO: update any trades... cancel them in postgres when book removed
+		
+		//access postgres db
+		function removeFromDB(book) {
+			return new Promise((resolve, reject) => {
+				const insertText =
+					// 'INSERT INTO public.ownership ("owner","bookisbn","date_added","active") ' +
+					// 'VALUES($1, $2, $3, $4) ' 
+					'UPDATE public.ownership ' +
+					' SET active = false, date_removed = $3 ' +					
+					// ' ON CONFLICT ("isbn13")' +
+					' WHERE ownership.owner = $1 AND ownership.bookid = $2 RETURNING *';
+				const insertValues = [];
+				try {															
+					insertValues.push(userId); //owner/userid from authenticated user
+					insertValues.push(book); //book isbn... TODO: change to book UUID
+					let today = new Date(Date.now());			
+					insertValues.push(today.toISOString()); //dateAdded	
+				} catch (error) { console.log(error); }
+				//new postgresql connection
+				var poolz3 = new pg.Pool(config);
+				poolz3.connect()
+					.then(client2 => {
+						// console.log('pg-connected2');
+						client2.query(insertText, insertValues, function (err, result) {
+							client2.release();
+							if (err) {
+								console.log("REJECTED" + err); reject(err);
+							} else {
+								console.log("removeBook result: " + JSON.stringify(result));
+								resolve(result.rows);
+							}//else
+						});//client.query
+					})
+					.catch(err => console.error('error connecting2', err.stack))
+					.then(() => poolz3.end());
+			});
+		}//removeMyBook fn
 	}//removeMyBook
-/***************************************** */
+	/***************************************** */
 	/**myBooks equivalent */	//search DB for book data that user owns//'GET' to /books/db	
 	this.getAppts = function (req, res) {
 		// console.log('handler.server.js.getAppts');		

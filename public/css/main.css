@@ -246,15 +246,15 @@ n
 }
 
 .btn {	/* Styling for buttons */
-	margin: 5px 10px;
-	color: white;
-	background-color: #acacff;
+	margin: 10px 0 0 0;
+ 	   color: white;
+  	  background-color: #acacffbd;
 	display: inline-block;
 	border: 0;
 	font-size: 14px;
 	border-radius: 3px;
-	padding: 10px 5px;
-	width: 100px;
+	padding: 5px 5px;
+/* 	width: 100px; */
 	font-weight: 500;
 	cursor:pointer;
 }
