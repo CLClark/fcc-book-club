@@ -30,22 +30,26 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					let userInput = i.toUpperCase();
 					var reg = new RegExp('^\S{0,50}$'); //search term less than 50				
 					// if (reg.test(i)) {
-						// Dispatch the event.
-						document.querySelector('#poll-view').dispatchEvent(yelper);
+						
 						//execute the GET
 						bookFind(userInput);
+						
+						//handle gui (tab)						
+						tabColourer("search-club");
 						document.querySelector('#zipSearch').value = "";
+						// Dispatch "results" loading event
+						document.querySelector('#poll-view').dispatchEvent(yelper);
 					// }
 				}				
 
 				function bookFind(searchValue) {
-				/*  date not needed in book app
-					let tDay = new Date();
-					let timeFrame = new Date(tDay.getFullYear(), tDay.getMonth(), tDay.getDate())
-					if (tDay.getHours() >= 20) {
-						timeFrame.setDate(timeFrame.getDate() + 1);
-					}
-				*/
+					/*  date not needed in book app
+						let tDay = new Date();
+						let timeFrame = new Date(tDay.getFullYear(), tDay.getMonth(), tDay.getDate())
+						if (tDay.getHours() >= 20) {
+							timeFrame.setDate(timeFrame.getDate() + 1);
+						}
+					*/
 					var request = ('/club/?terms=' + searchValue);// + "&timeframe=" + timeFrame.toISOString());
 					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, 7000, function (err, data, status) {
 						if(err){console.log("request error")
@@ -64,6 +68,15 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					*/
 					}));
 				};
+
+				function tabColourer(selectedTab){
+					let tabs = document.querySelectorAll(".navicon");
+					tabs.forEach((thisTab) => {
+						thisTab.setAttribute("style","opacity: .7");
+					});
+					let fullOpacity = document.querySelector( ("#") + selectedTab);
+					fullOpacity.setAttribute("style", "");
+				}
 			});
 		},
 		//query to add a new book (google api pass through)
@@ -83,24 +96,26 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				if (key === 13) { // 13 is enter
 					// code for enter
 					console.log("fired input: " + i);
-					let userInput = i.toUpperCase();
-					// Dispatch the event.
-					document.querySelector('#poll-view').dispatchEvent(yelper);
+					let userInput = i.toUpperCase();					
 					//execute the GET
 					bookFind(userInput);
+					//handle GUI
+					tabColourer("add-books");
+					// Dispatch "result space" event.
+					document.querySelector('#poll-view').dispatchEvent(yelper);
 					document.querySelector('#gipSearch').value = "";
 				}				
 				var reg = new RegExp('^\S{0,50}$'); //search term less than 50				
 				// if (reg.test(i)) {					
 				// }
 				function bookFind(searchValue) {
-				/*  date not needed in book app
-					let tDay = new Date();
-					let timeFrame = new Date(tDay.getFullYear(), tDay.getMonth(), tDay.getDate())
-					if (tDay.getHours() >= 20) {
-						timeFrame.setDate(timeFrame.getDate() + 1);
-					}
-				*/
+					/*  date not needed in book app
+						let tDay = new Date();
+						let timeFrame = new Date(tDay.getFullYear(), tDay.getMonth(), tDay.getDate())
+						if (tDay.getHours() >= 20) {
+							timeFrame.setDate(timeFrame.getDate() + 1);
+						}
+					*/
 					var request = ('/books/?terms=' + searchValue);// + "&timeframe=" + timeFrame.toISOString());
 					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, 7000, function (err, data, status) {
 						document.querySelector('#poll-view').innerHTML = "";
@@ -109,7 +124,17 @@ var MYLIBRARY = MYLIBRARY || (function () {
 
 						functionCB(booksFound, 'poll-view', {controls: "add"}, null);
 					}));
-				};				
+				};
+
+				//duplicate code
+				function tabColourer(selectedTab){
+					let tabs = document.querySelectorAll(".navicon");
+					tabs.forEach((thisTab) => {
+						thisTab.setAttribute("style","opacity: .7");
+					});
+					let fullOpacity = document.querySelector( ("#") + selectedTab);
+					fullOpacity.setAttribute("style", "");
+				}				
 			});
 		},
 
@@ -324,10 +349,11 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				//optionally add the  "show-text" div		
 				if (options !== null) {
 					if (options.controls == "add") {
-						addControls();
+						//pass in (option): which button type to append? add, delete, ...
+						addControls(options.controls);
 					}
 					//add navigation buttons to book results
-					function addControls() {
+					function addControls(controlType) {
 						let info = JSON.parse(polljone["json_string"]);						
 						if(info.hasOwnProperty("volumeInfo")){
 							let idArr = info["volumeInfo"];
@@ -345,8 +371,14 @@ var MYLIBRARY = MYLIBRARY || (function () {
 							}
 							let addButton = document.createElement("div");
 							addButton.className = "btn";
-							addButton.innerHTML = "Add to Your Collection?";
-							addButton.addEventListener("click", addAction.bind(addButton), {once: true});	
+							if(controlType == "add"){
+								addButton.innerHTML = "Add to Your Collection?";
+								addButton.addEventListener("click", addAction.bind(addButton), {once: true});	
+							}
+							else if(controlType == "delete"){
+								addButton.innerHTML = "Remove from Your Collection?";
+								addButton.addEventListener("click", delAction.bind(addButton), {once: true});	
+							}							
 							//append to DOM
 							newDiv.appendChild(addButton);
 							//add function, query node
@@ -361,7 +393,19 @@ var MYLIBRARY = MYLIBRARY || (function () {
 										// console.log(data);
 									}
 								}));
-							}//addAction							
+							}//addAction	
+							function delAction(){
+								let bound = this;
+								ajaxFunctions.ready(ajaxFunctions.ajaxRequest('POST', addLink, 8000, function (err, data, status) {
+									if (err) { console.log(err); bound.innerHTML = "Error";	 }
+									else {
+										//handle the server response
+										bound.setAttribute("style","background-color: grey;");
+										bound.innerHTML = "Removed";										
+										// console.log(data);
+									}
+								}));
+							}//delAction
 						}//has volumeInfo						
 					}//addControls fn
 					newWrapSup.className = newWrapSup.className + " " + options.classText;

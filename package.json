@@ -23,6 +23,7 @@
   "authors": "Chris L Clark",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "connect-pg-simple": "^4.2.1",
     "cors": "^2.8.4",
     "dotenv": "^1.2.0",

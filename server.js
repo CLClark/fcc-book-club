@@ -11,7 +11,6 @@ var pgSession = require('connect-pg-simple')(session);
 var parse = require('pg-connection-string').parse;
 const fs = require('fs');
 var http = require('http');
-
 var passport = require('passport');
 
 //postgresql config
@@ -40,17 +39,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// routes(app);
 routes(app, passport);
 
 const server = http.createServer(app);
-
-// var dsConfig = "./app/config/config.yml";
-// const Deepstream = require('deepstream.io')
-// const ds = new Deepstream(dsConfig);
-// // var deepstreamC = require('deepstream.io-client-js');
-// // const client = deepstreamC('ws://localhost:6020').login({username: "server"});
-// ds.start();
 
 var port;
 if(process.env.LOCAL == false){

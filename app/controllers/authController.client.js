@@ -283,6 +283,15 @@ var AUTHLIB = AUTHLIB || (function () {
 				}
 			}
 
+			function tabColourer(selectedTab){
+				let tabs = document.querySelectorAll(".navicon");
+				tabs.forEach((thisTab) => {
+					thisTab.setAttribute("style","opacity: .7");
+				});
+				let fullOpacity = document.querySelector( ("#") + selectedTab);
+				fullOpacity.setAttribute("style", "");
+			}
+
 			function makeMyBooks(){
 				//<div id="api-icon" class="navicon">API ICON</div>
 				let newDiv = document.createElement("div");
@@ -310,6 +319,7 @@ var AUTHLIB = AUTHLIB || (function () {
 			}//makeMyTrades
 			//execute on btn click
 			function myBooksFn (){
+				tabColourer("my-books");
 				//2. query node for user books
 				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
 					var booksFound = JSON.parse(data);
@@ -329,6 +339,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				}));//ajax call				
 			}
 			function myTradesFn(){
+				tabColourer("my-trades");
 				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-trades', 8000, function (err, data, status) {
 					//1. declare results div			
 					//3. display books as results
@@ -350,6 +361,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				return newDiv;				
 			}//makeAddBooks
 			function addBooks(){
+				tabColourer("add-books");
 				//hide all unused search bars:
 				let allBars = document.querySelectorAll(".sbar");
 				allBars.forEach((searchBar) => {
@@ -380,6 +392,7 @@ var AUTHLIB = AUTHLIB || (function () {
 			}//makeSearchClub
 
 			function searchClub(){
+				tabColourer("search-club");
 				//hide all unused bars:
 				let allBars = document.querySelectorAll(".sbar");
 				allBars.forEach((searchBar) => {

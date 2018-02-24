@@ -234,7 +234,7 @@ function BooksHandler() {
 						}
 					}//if current book
 				}//for loop
- */
+ 				*/
 				if (opts) { console.log(opts); }
 				let finalProm = result.map((value, index) => {
 					return new Promise((resolve, reject) => {						

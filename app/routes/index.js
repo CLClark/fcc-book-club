@@ -3,6 +3,7 @@
 var path = process.cwd();
 var queue = require('queue')
 var BooksHandler = require(path + '/app/controllers/booksHandler.server.js');
+var UserHandler = require(path + '/app/controllers/userHandler.server.js');
 
 module.exports = function (app, passport) {
 
@@ -88,9 +89,15 @@ module.exports = function (app, passport) {
 			});
 		});
 	/*********************************************/
+	//form module
+	var bodyParser = require('body-parser');
+	// create application/x-www-form-urlencoded parser
+	var urlencodedParser = bodyParser.urlencoded({ extended: false })	
+	
+	/******************************************* */
 	var booksHandler = new BooksHandler();
 	var userHandler = new UserHandler();
-	
+
 	app.route('/books')
 		.get(isLoggedIn, booksHandler.allBooks);		
 
@@ -99,7 +106,10 @@ module.exports = function (app, passport) {
 		// .get(isLoggedIn, booksHandler.ourBooks);		
 		.get(booksHandler.ourBooks)
 		//handle profile updates		
-		.post(isLoggedIn, userHandler.updateProfile)
+		.post(isLoggedIn, urlencodedParser, function (req, res, next) {
+			if (!req.body) return res.sendStatus(400);
+			return next();
+		      }, userHandler.updateProfile)
 		
 	app.route('/my-books')
 		.get(isLoggedIn, booksHandler.myBooks)
