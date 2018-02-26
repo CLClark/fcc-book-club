@@ -116,8 +116,8 @@ module.exports = function (app, passport) {
 		.post(isLoggedIn, booksHandler.addMyBook)
 		.delete(isLoggedIn, booksHandler.removeMyBook);
 
-	// app.route('/my-trades')
-		// .get(isLoggedIn, booksHandler.myTrades);
+	app.route('/my-trades')
+		.get(isLoggedIn, booksHandler.myTrades);
 
 	// app.route('/books/db')
 	// 	.get(isLoggedIn, booksHandler.getAppts)

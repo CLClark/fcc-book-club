@@ -190,10 +190,39 @@ header a ~ p {
  left: 50%;
  z-index: 100;
 }
-#profile-navi{
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+.trades-navi, #trades-navi{ /* formerly profile-navi*/
+  display: inline-block;
+  flex: 1;
+  text-align: center;
+  height: 10px;
+  margin: auto 5px;
+}
+.trades-navi-trade, #trades-navi-trade{ /* new trade button*/
+	display: inline-block;
+	flex: 1;
+	text-align: center;
+	height: 10px;
+	margin: auto 5px;
+}
+.trades-navi-trade:not(:hover), #trades-navi-trade:not(:hover){ /* new trade button*/
+	background-color: #ee2838bf
+}
+.trades-navi-wrap{
+	display: flex;
+	  flex-direction: row;
+	  justify-content: space-between;
+}
+
+.trades-text-wrap{
+	margin: auto 0 auto 0;
+/* 	flex: .2; */
+}
+
+#trades-footer{
+	border-color: black;
+    border-width: 0 0 2px 0;
+    border-style: dashed;
+    height: 8px;
 }
 
 #fresh-appts{
@@ -236,7 +265,6 @@ img {
   height: auto;
 }
 
-n
 
 /****** Click Styling ******/
 
@@ -246,27 +274,28 @@ n
 }
 
 .btn {	/* Styling for buttons */
-	margin: 10px 0 0 0;
- 	   color: white;
-  	  background-color: #acacffbd;
+	margin: auto 4px;
+	color: white;
+	background-color: #acacffbd;
 	display: inline-block;
 	border: 0;
 	font-size: 14px;
 	border-radius: 3px;
-	padding: 5px 5px;
-/* 	width: 100px; */
+	padding: 10px 5px;
+	/* width: 100px; */
 	font-weight: 500;
-	cursor:pointer;
+	cursor: pointer;
 }
 
-.btn:focus {	/* Remove outline when hovering over button */
+.btn:hover {	/* Remove outline when hovering over button */
 	outline: none;
+	background-color: #6e3dee;
 }
 
 .btn:active {	/* Scale the button down by 10% when clicking on button */
-	transform: scale(0.9, 0.9);
-	-webkit-transform: scale(0.9, 0.9);
-	-moz-transform: scale(0.9, 0.9);
+	transform: scale(1.0, 0.9);
+	-webkit-transform:  scale(1.0, 0.9);
+	-moz-transform:  scale(1.0, 0.9);
 }
 
 .btn-delete {	/* Styling for delete button */
@@ -464,12 +493,13 @@ span {
 /******* poll styles **********/
 #pollDb{
   flex: 1;
+  max-width: 50%;
 }
 
-#appts-view{
+/* #trades-view{
 	padding: 5px 5% 10px 5%;
-  background-color: #f5deb7;  
-}
+  	background-color: #f5deb7;  
+} */
 
 #appts-img{
   height: 50px;
@@ -498,7 +528,7 @@ span {
    margin: 4px;
    border-radius: 3px;
    /* max-width: 23%; */
-   flex-basis:  50%;
+   flex-basis:  100%;
    border-color: white;
    border-width: medium;
    border-style: ridge;
@@ -573,9 +603,9 @@ span {
 	/* font-size: x-large; */
 	font-weight: bold;
 	color: #FFA000;
-  /* white-space: nowrap; */
-  width: 10px  
-  background-color: #02144a;
+	white-space: normal;
+ /*   width: 10px;
+ background-color: #02144a; */
 }
 
 #poll-view{
@@ -583,7 +613,7 @@ span {
 	margin: 2px 0px;
 	flex-basis: 400px;
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	flex-wrap: wrap;
 	justify-content: flex-start;	 
 }
@@ -605,20 +635,24 @@ ul.poll-view-list, #profile-container{
 }
 
 .poll-view-list-poll{
-	/* margin: 0 0 50px 0; */
-	/* width: 100%; */
-  overflow: hidden;
-  padding: 0 0 0 10px;
-	/*flex: 0 0 70%;
-	padding: 0 10% 0 0;
-	*/
+	overflow: hidden;
+	padding: 0 5px 0 10px;
 	list-style: none;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
 }
-
 .poll-wrap{
 	display: flex;
-  flex: 1;
-  color: darkgrey;
+	flex: 1;
+	color: darkgrey;
+}
+.poll-wrap ul li, .poll-wrap div li {
+	white-space: nowrap;
+/* 	overflow: hidden; */
+	text-overflow: ellipsis;
+	width: 10px;
+	
 }
 
 

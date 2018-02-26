@@ -76,7 +76,9 @@ var MYLIBRARY = MYLIBRARY || (function () {
 						thisTab.setAttribute("style", "opacity: .7");
 					});
 					let fullOpacity = document.querySelector(("#") + selectedTab);
-					fullOpacity.setAttribute("style", "");
+					if(fullOpacity !== null){
+						fullOpacity.setAttribute("style", "");
+					}					
 				}
 			});
 		},
@@ -248,7 +250,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				contDiv.id = "vote-controls";
 
 				//pre-"click" poll placeholder, contains object data
-				var newDiv = document.createElement("ul");
+				var newDiv = document.createElement("div"); //change from ul
 				newDiv.id = divName;
 				newDiv.className = "poll-view-list-poll";
 				//object data
@@ -261,22 +263,35 @@ var MYLIBRARY = MYLIBRARY || (function () {
 
 				//pass in parent, adds details for each
 				function detailer(parent, jsondata) {
-					let authors = document.createElement("li");
-					authors.id = "authors-details";
-					authors.innerHTML = ("Authors: " + jsondata.authors);
+					/* 	let authors = document.createElement("li");
+						authors.id = "authors-details";
+						authors.innerHTML = ("Authors: " + jsondata.authors);
 
-					let isbn = document.createElement("li");
-					isbn.id = "isbn-details";
-					isbn.innerHTML = ("ISBN/ID: " + jsondata.isbn13);
+						let isbn = document.createElement("li");
+						isbn.id = "isbn-details";
+						isbn.innerHTML = ("ISBN/ID: " + jsondata.isbn13);
 
-					let pages = document.createElement("li");
-					pages.id = "pages-details";
-					pages.innerHTML = ("Pages: " + jsondata.pages);
+						let pages = document.createElement("li");
+						pages.id = "pages-details";
+						pages.innerHTML = ("Pages: " + jsondata.pages);
 
-					parent.appendChild(authors);
-					parent.appendChild(isbn);
-					parent.appendChild(pages);
-				}
+						parent.appendChild(authors);
+						parent.appendChild(isbn);
+						parent.appendChild(pages);
+					*/
+
+					Object.keys(jsondata).map((val, ind, arr) => {
+						if (jsondata[val] !== null && val !== "json_string" && val !== "language" && val !== "image_url" && val !== "url"){
+							let detail = document.createElement("li");
+							detail.id = (val + "-details");
+							detail.innerHTML = (val.toUpperCase() + ": " + jsondata[val]);
+							parent.appendChild(detail);
+							return "";
+						}						
+					});
+					function makeEle(){
+					}
+				}//detailer
 
 				//if we're making an "Appointment" element, add the info
 				if (polljone.appt) {

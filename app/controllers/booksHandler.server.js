@@ -905,9 +905,9 @@ function BooksHandler() {
 		console.log('removeMyBook callback');
 		var userId = new String(req.user.id).substring(0, 140) || null; //arbitrary cut off
 
-		if (req.query.isbn !== null && req.query.isbn !== "undefined") {
+		if (req.query.volume !== null && req.query.volume !== "undefined") {
 			//1 get the book ID
-			var volId = new String(req.query.isbn).substring(0, 20) || null;
+			var volId = new String(req.query.volume).substring(0, 20) || null;
 			removeFromDB(volId)
 			.then(() => {
 				res.json({status: "Successful remove"});
@@ -923,11 +923,11 @@ function BooksHandler() {
 		function removeFromDB(book) {
 			return new Promise((resolve, reject) => {
 				const insertText =
-					// 'INSERT INTO public.ownership ("owner","bookisbn","date_added","active") ' +
-					// 'VALUES($1, $2, $3, $4) ' 
+					// 'INSERT INTO public.ownership ("owner","bookid","date_added","date_removed","active") ' +
+					// 'VALUES($1, $2, $3, $4, $5, $6) ' 
 					'UPDATE public.ownership ' +
 					' SET active = false, date_removed = $3 ' +					
-					// ' ON CONFLICT ("isbn13")' +
+					//  ' ON CONFLICT ("bookisbn")' +
 					' WHERE ownership.owner = $1 AND ownership.bookid = $2 RETURNING *';
 				const insertValues = [];
 				try {															
@@ -936,6 +936,9 @@ function BooksHandler() {
 					let today = new Date(Date.now());			
 					insertValues.push(today.toISOString()); //dateAdded	
 				} catch (error) { console.log(error); }
+
+					console.log(insertText)
+					console.log(insertValues)
 				//new postgresql connection
 				var poolz3 = new pg.Pool(config);
 				poolz3.connect()
@@ -957,6 +960,121 @@ function BooksHandler() {
 		}//removeMyBook fn
 	}//removeMyBook
 	/***************************************** */
+
+	this.myTrades = function (req, res) {
+		var pool = new pg.Pool(config);
+		function queryMaker() {
+			return new Promise((resolve, reject) => {
+				//trades db columns: "id","proposer","receiver","status","active","date_proposed","date_responded","paired_trade","pro_ownership","rec_ownership"
+				/* var text = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
+					', ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
+					' FROM ownership INNER JOIN books ON ownership.bookid = books.volume WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
+					'';
+				 */
+				var text = 
+				' SELECT trades.id,trades.proposer,trades.receiver,trades.status,trades.active,trades.date_proposed,trades.date_responded,trades.paired_trade,trades.pro_ownership,trades.rec_ownership ' +
+				' FROM trades INNER JOIN ownership  proposer ON ( proposer.id = trades.pro_ownership ) INNER JOIN ownership receiver ON ( receiver.id = trades.rec_ownership ) ' +
+				' WHERE (trades.proposer = $1 OR trades.receiver = $1) AND NOT (trades.active = false) ' +
+				'';
+				// ' RETURNING * ' ;
+
+				const values = [];
+				var uid = req.user.id;
+				values.push(uid);
+
+				//check if query has any appts
+				/* 	if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
+						//yes> add each appt and text to the arrays
+						console.log(Array.isArray(req.query.appts) + " : is array check");
+						let cap = req.query.appts.length - 1;
+						var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
+							values.push(cVal);
+							if (cInd < cap) {
+								return acc.concat(('$' + (2 + cInd) + ', '));
+							}
+							else {
+								return acc.concat(('$' + (2 + cInd)));
+							}
+						}, (text.concat(' AND _id NOT IN ('))
+						);
+						resolve([combNots.concat(')'), values]);
+				} */
+				// else {
+				//console.log(Array.isArray(req.query.appts) + " : is array check");
+				//no>return the text/values:
+				resolve([text, values]);
+				// }
+			});
+		}
+		//more code here
+
+		queryMaker().then((textArray) => {
+			var text = textArray[0];
+			// console.log(text);	
+			var values = textArray[1];
+			// console.log(values);
+			pool.connect()
+				.then(client => {
+					console.log('pg-connected: myTrades')
+					client.query(text, values, function (err, result) {
+						if (err) {
+							res.status(403);
+							console.log(err);
+							console.log("get appts error");
+							res.json({ tradesFound: "none" });
+						}
+						else {
+							let rc;
+							if (Array.isArray(result.rows)) {
+								rc = result.rowCount;
+							}
+							else {
+								rc = 0;
+							}
+							client.release();
+							if (rc == 0) {
+								res.status(200);
+								res.json({ tradesFound: "none" });
+							} else {
+								console.log(JSON.stringify(result));
+								res.json(result.rows);
+								/* bookBuilder(result.rows, false)
+									.then(builtBooks => {
+										console.log("built books: " + builtBooks);
+										res.json(builtBooks);
+									})
+									.catch(e => { console.log(e + "loopy Loop"); });
+								 */
+							}
+							/* const promiseSerial = funcs =>
+									funcs.reduce((promise, func) =>
+										promise.then(result => func().then(Array.prototype.concat.bind(result))),
+										Promise.resolve([])
+									);
+								// convert each url to a function that returns a promise
+								const funcs = result.rows.filter(rowCheck => rowCheck).map(
+									pgResp => () => yelpSingle(pgResp, null)
+								);
+	
+								promiseSerial(funcs)
+									.then(promies => (bookBuilder(promies, true)))
+									.then(builtBooks => {
+										res.json(builtBooks);
+										// console.log("builtBarsVVVV");							
+									})
+									.catch(e => { console.log(e + "loopy Loop"); });
+							*/
+						}//else no error
+					});
+				})
+				.catch(err => console.error('error connecting', err.stack))
+				.then(() => pool.end());
+		});
+
+	}//myTrades
+	/***************************************** */
+
+
 	/**myBooks equivalent */	//search DB for book data that user owns//'GET' to /books/db	
 	this.getAppts = function (req, res) {
 		// console.log('handler.server.js.getAppts');		

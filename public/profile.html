@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<title>books Club: FCC Book Club App</title>
 
@@ -7,135 +8,168 @@
 	<!--Load the AJAX API-->
 	<script type="text/javascript" src="common/ajax-functions.js"></script>
 	<script type="text/javascript" src="controllers/authController.client.js"></script>
-	<script type="text/javascript" src="controllers/bookController.client.js"></script>		
+	<script type="text/javascript" src="controllers/bookController.client.js"></script>
 	<script type="text/javascript">
 		MYLIBRARY.init([MYLIBRARY.bookFormer, null, null]);			
 	</script>
 </head>
 <header></header>
-<body><div id="fb-root">
-</div>
 
-<div id="navi-container" class="container">
-
-	<div id="searchResults">Google Books
-		<br>search results</div>
-
-	<div id="navi" class="navi-menu">
-		<!-- <div id="api-icon" class="navicon">API ICON</div> -->
-		<div class="container" id="welcome-container">
-			<div id="welcome-text" class="naviconZ">
-				<p>Welcome to Books Club<span id="display-name"></span>!</p>
-			</div>
-			<span id="auth-container">
-			</span>
-			<br>
-			<div class="fb-login-button" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false"
-			 data-auto-logout-link="true" data-use-continue-as="false">
-			</div>
-			<div id="status"></div>
-		</div>
+<body>
+	<div id="fb-root">
 	</div>
-	<!-- <div id="clock">
+
+	<div id="navi-container" class="container">
+
+		<div id="searchResults">Google Books
+			<br>search results</div>
+
+		<div id="navi" class="navi-menu">
+			<!-- <div id="api-icon" class="navicon">API ICON</div> -->
+			<div class="container" id="welcome-container">
+				<div id="welcome-text" class="naviconZ">
+					<p>Welcome to Books Club
+						<span id="display-name"></span>!</p>
+				</div>
+				<span id="auth-container">
+				</span>
+				<br>
+				<div class="fb-login-button" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false"
+				 data-auto-logout-link="true" data-use-continue-as="false">
+				</div>
+				<div id="status"></div>
+			</div>
+		</div>
+		<!-- <div id="clock">
 			<h3 id="clock-time">
 				tick' tock'
 			</h3>
 		</div> -->
-</div>
+	</div>
 
-<div class="container">
-<div class="club-profile">
-	<div class="club-profile-interface">
-				    
-		<form id="frm1" action="/club" method="post">
-		<div class="wrap">
-			<div class="cell description">ID: </div>
-			<div id="profile-id" class="cell profile-value"></div>
-			<div id="userid-dummy" class="cell formspace">
-				<input type="submit" value="Update?">
-				<!-- <input onclick="myFunction()" value="Update?" type="button"> -->
+	<div class="container">
+		<div class="club-profile">
+			<div class="club-profile-interface">
+
+				<form id="frm1" action="/club" method="post">
+					<div class="wrap">
+						<div class="cell description">ID: </div>
+						<div id="profile-id" class="cell profile-value"></div>
+						<div id="userid-dummy" class="cell formspace">
+							<input type="submit" value="Update?">
+							<!-- <input onclick="myFunction()" value="Update?" type="button"> -->
+						</div>
+					</div>
+					<div class="wrap">
+						<div class="cell description">Display Name: </div>
+						<div id="profile-username" class="cell profile-value"></div>
+						<div class="cell formspace">
+							<input type="profile-text" name="pname" placeholder="update display name...">
+						</div>
+					</div>
+					<div class="wrap">
+						<div class="cell description">City: </div>
+						<div id="profile-city" class="cell profile-value"></div>
+						<div class="cell formspace">
+							<input type="profile-text" name="pcity" placeholder="update city...">
+						</div>
+					</div>
+					<div class="wrap">
+						<div class="cell description">State: </div>
+						<div id="profile-state" class="cell profile-value"></div>
+						<div class="cell formspace">
+							<input type="profile-text" name="pstate" placeholder="update state...">
+						</div>
+					</div>
+				</form>
+				<div id="club-stats">
+					<p>
+						<span>My Book Club</span>
+					</p>
+					<p>
+						<span>Active Trades: </span>
+						<span id="active-poll-count" class="profile-value"></span>
+					</p>
+					<p>
+						<span>Books Owned: </span>
+						<span id="votes-count" class="profile-value"></span>
+					</p>
+					<p>
+						<span>Books Traded: </span>
+						<span id="voters-count" class="profile-value"></span>
+					</p>
+				</div>
+				<div class="poll-profile-control" id="poll-profile-control"></div>
+
 			</div>
 		</div>
-		<div class="wrap">
-			<div class="cell description">Display Name: </div>
-			<div id="profile-username" class="cell profile-value"></div>
-			<div class="cell formspace">
-				<input type="profile-text" name="pname" placeholder="update display name...">
-			</div>
-		</div>
-		<div class="wrap">
-			<div class="cell description">City: </div>				
-				<div id="profile-city" class="cell profile-value"></div>
-				<div class="cell formspace"><input type="profile-text" name="pcity" placeholder="update city..."></div>				
-			</div>
-			<div class="wrap">
-				<div class="cell description">State: </div>				
-				<div id="profile-state" class="cell profile-value"></div>
-				<div class="cell formspace"><input type="profile-text" name="pstate" placeholder="update state..."></div>
-			</div>	</form>
-			<div id="club-stats">
-				<p>
-					<span>My Book Club</span>
-				</p>
-				<p>
-					<span>Active Trades: </span>
-					<span id="active-poll-count" class="profile-value"></span>
-				</p>
-				<p>
-					<span>Books Owned: </span>
-					<span id="votes-count" class="profile-value"></span>
-				</p>
-				<p>
-					<span>Books Traded: </span>
-					<span id="voters-count" class="profile-value"></span>
-				</p>
-			</div>
-			<div class="poll-profile-control" id="poll-profile-control"></div>
-			
-			</div>
-</div>
-</div>
+	</div>
 
-<div class="container center-bar">
-	<a href="/"><div id="home-icon" class="naviconZ">	
-	</div></a>
-	<!-- 	<img id="zip-image" src="public/img/enteryourzip.png" alt="enter your zip:" /> -->
-	<input type="text" id="zipSearch" name="q" class="sbar" placeholder="Search Our Books...">
-	<input type="text" id="gipSearch" name="q" class="sbar" placeholder="Search new books with Google Books API">
-</div>
+	<div class="container center-bar">
+		<a href="/">
+			<div id="home-icon" class="naviconZ">
+			</div>
+		</a>
+		<!-- 	<img id="zip-image" src="public/img/enteryourzip.png" alt="enter your zip:" /> -->
+		<input type="text" id="zipSearch" name="q" class="sbar" placeholder="Search Our Books...">
+		<input type="text" id="gipSearch" name="q" class="sbar" placeholder="Search new books with Google Books API">
+	</div>
 
-<!-- <div class="container">
+	<!-- <div class="container">
 	<div class="club-profile poll-profile" id="poll-profile">
 		<p><span>My Books: </span><span id="profile-polls" class="profile-value"></span></p>			
 	</div>		
 </div>	 -->
-<div id="events-sup">
-	<div id="loading" lock="on">
-		<div class="w3-animate-fading">
-			<img id="loading-image" src="public/img/bookslogo.png" alt="Loading..." />
-		</div>
-	</div>
 
-	<!--LEFT Column (Div that will hold the polls) -->
-	<div id="pollDb">
-		<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
-		<ul id="poll-view" class="poll-view-list"></ul>
-	</div>
-
-	<!-- RIGHT Column (flex) -->
 	<div id="profile-container" style="display: none">
-		<div id="profile-navi">
-			<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Appointments" /> -->
+		<div id="trades-navi-wrap" class="trades-navi-wrap">
+			<div id="trades-text-wrap" class="trades-text-wrap">
+				<h3 id="trades-text" class="trades-text"></h3>
+			</div>
+			<div id="trades-navi" class="btn trades-navi">
+				Hide Trades?
+				<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
+			</div>
+			<div id="trades-navi-trade" class="btn trades-navi-trade">
+				Create a New Trade
+			</div>
 		</div>
-		<ul id="appts-view"></ul>
+		<div id="trades-view"></div>
+		<div id="trades-footer"></div>
 	</div>
-</div>
+	<div id="events-sup">
+		<div id="loading" lock="on">
+			<div class="w3-animate-fading">
+				<img id="loading-image" src="public/img/bookslogo.png" alt="Loading..." />
+			</div>
+		</div>
+		<!--LEFT Column (Div that will hold the polls) -->
+		<div id="pollDb">
+			<div id="results-navi-wrap" class="trades-navi-wrap">
+				<div id="results-text-wrap" class="trades-text-wrap">
+					<h3 id="results-text"></h3>
+				</div>
+				<div id="results-navi" class="btn trades-navi">
+					Hide Trades?
+					<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
+				</div>
+				<div id="results-navi-trade" class="btn trades-navi-trade">
+					Create a New Trade
+				</div>
+			</div>
+			<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
+			<ul id="poll-view" class="poll-view-list"></ul>
+		</div>
+
+		<!-- RIGHT Column (flex) moved to above book results-->
+
+	</div>
 
 </body>
 
 <footer>
 	<script type="text/javascript">	
-		AUTHLIB.init([MYLIBRARY.bookFormer,false, AUTHLIB.authScript]);
+		AUTHLIB.init([MYLIBRARY.bookFormer, false, AUTHLIB.authScript]);
 		AUTHLIB.navi();
 		AUTHLIB.authScript(false);
 		// AUTHLIB.fbControl();
@@ -143,4 +177,5 @@
 		MYLIBRARY.bookFinder();
 	</script>
 </footer>
+
 </html>

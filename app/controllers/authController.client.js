@@ -131,7 +131,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				refresher.addEventListener('click', () => {
 					//resets all visible appts
 					refresher.className = refresher.className + " w3-spin"; //spin the image
-					let resetApptsList = document.querySelector("#appts-view");
+					let resetApptsList = document.querySelector("#trades-view");
 					if (resetApptsList.hasChildNodes()) {
 						while (resetApptsList.firstChild) {
 							resetApptsList.removeChild(resetApptsList.firstChild);
@@ -226,7 +226,7 @@ var AUTHLIB = AUTHLIB || (function () {
 					}
 					descriptUser(authObj);
 					/* 	if (document.querySelector("#appts-img") == null) {
-						document.querySelector("#profile-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
+						document.querySelector("#trades-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
 					}*/
 					//add "My Books" div
 					navi.appendChild(makeMyBooks());
@@ -315,6 +315,27 @@ var AUTHLIB = AUTHLIB || (function () {
 				// aPro1.href = "/my-trades";
 				aPro1.innerHTML = "My Trades";
 				newDiv.appendChild(aPro1);
+
+				var tradeNavi = document.querySelector("#trades-navi");
+				if(tradeNavi !== null){
+					tradeNavi.addEventListener("click",hideButton.bind(tradeNavi),false);
+				}			
+
+				function hideButton(){
+					var trades = document.querySelector("#trades-view");
+					if(trades !== null)					{
+						if (this.innerHTML == "Show Trades"){					
+							trades.setAttribute("style", "display: unset");
+							trades.setAttribute("show-status",true);
+							this.innerHTML = "Hide Trades?";
+						} else {
+							trades.setAttribute("style", "display: none");
+							trades.setAttribute("show-status",false);
+							this.innerHTML = "Show Trades";	
+						}
+					}										
+				}
+				
 				return newDiv;				
 			}//makeMyTrades
 			//execute on btn click
@@ -328,7 +349,9 @@ var AUTHLIB = AUTHLIB || (function () {
 						let place = document.querySelector("#poll-view");
 						place.innerHTML = "No books found.";
 					}
-					else{						
+					else{
+						let resultNote = document.querySelector("#results-text");
+						resultNote.innerHTML = "My Books: ";
 						// console.log(booksFound);
 						divCB(booksFound, 'poll-view', {classText: "owned-book", controls: "delete"}, null);						
 					}					
@@ -338,16 +361,67 @@ var AUTHLIB = AUTHLIB || (function () {
 					// console.log(data);
 				}));//ajax call				
 			}
-			function myTradesFn(){
+			function myTradesFn() {
+				//GUI notification
 				tabColourer("my-trades");
-				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-trades', 8000, function (err, data, status) {
-					//1. declare results div			
-					//3. display books as results
-					//4. display corollary divs+functions (delete, add, etc)
-					process(data);
+				//Inform User, app is "loading..."
+				var tempText = document.querySelector("#trades-text");
+				//show the trades list...
+				if(document.querySelector("#trades-view").getAttribute("show-status") == "false"){
+					document.querySelector("#trades-navi").dispatchEvent(new MouseEvent("click"));
+				}				
+				var proCon = document.querySelector("#profile-container") || null;
 
+				if (tempText !== null) {
+					tempText.innerHTML = "Loading...";					
+					// loader(true); //toggle lock pic
+				}
+				//query server
+				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-trades', 8000, function (err, data, status) {
+					if (tempText !== null) { tempText.innerHTML = "My Trades:"; }
+					console.log(data);
+					var tradesFound = JSON.parse(data);
+					
+					renderTrades(tradesFound);
 				}));//ajax call	
+				
+				function renderTrades(tradeData){									
+					//no "new" bars compared to pre-delete					 
+					if (tradeData.tradesFound == "none") {
+						proCon.setAttribute("style", "display: unset");
+						// proCon.appendChild(makeAppts("none found"));						
+						// loader(false);		//lockpic off			
+					}//Found some appointments
+					else {
+						proCon.setAttribute("style", "display: unset");
+						//third arg is div class //divCB is called within barFormer.addElement
+						tradeData.sort(function (a, b) {
+							let aTime = new Date(a.appt["date_proposed"]);
+							let bTime = new Date(b.appt["date_proposed"]);
+							return aTime.getTime() - bTime.getTime();
+						});
+						divCB(tradeData, "trades-view", { "classText": " trade" }, null);
+						// addDeleteDiv();						
+						// loader(false); //toggle lock pic
+					}
+					//unspin the icon
+					// let refreshIcon = document.querySelector('#fresh-appts')
+					// refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
+					/****** */
+				/* let profSpace = document.querySelector("#profile-container");
+					profSpace.setAttribute("style", "display: unset");
+					// let tradesList = document.querySelector("#trades-view");
+					// let holder = document.createElement("div");
+					// holder.innerHTML = tradeData;
+					// tradesList.appendChild(holder);
+					let tO = [{ title: tradeData}];
+					// let tempJson = JSON.parse(tO.toString());
+					divCB(tO, 'trades-view', {classText: "trade", controls: null}, null);	
+				*/
+				}
+
 			}//myTradesFn
+
 			function makeAddBooks(){
 				let newDiv = document.createElement("div");
 				newDiv.id = "add-books";
@@ -432,7 +506,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				var proCon = document.querySelector("#profile-container") || null;
 				var request = ('/bars/db?');
 				//1. find appts loaded on current page
-				var haveAppts = document.querySelector("#appts-view");
+				var haveAppts = document.querySelector("#trades-view");
 				var hApptsList = haveAppts.querySelectorAll(".poll-view-list-poll");
 				var ak2Add = [];
 				let qString;
@@ -459,10 +533,8 @@ var AUTHLIB = AUTHLIB || (function () {
 					//no "new" bars compared to pre-delete					 
 					if (apptsFound.barsFound == "none") {
 						proCon.setAttribute("style", "display: unset");
-						// proCon.appendChild(makeAppts("none found"));
-						//lockpic off
-						loader(false);
-					
+						// proCon.appendChild(makeAppts("none found"));						
+						loader(false);		//lockpic off			
 					}
 					//Found some appointments
 					else {
@@ -473,7 +545,7 @@ var AUTHLIB = AUTHLIB || (function () {
 							let bTime = new Date(b.appt["timestamp"]);
 							return aTime.getTime() - bTime.getTime();
 						});
-						divCB(apptsFound, "appts-view", { "classText": " appt-wrap-sup" }, null);
+						divCB(apptsFound, "trades-view", { "classText": " appt-wrap-sup" }, null);
 						addDeleteDiv();
 						//toggle lock pic
 						loader(false);
@@ -628,7 +700,7 @@ var AUTHLIB = AUTHLIB || (function () {
 					let zat = arg;
 					ajaxFunctions.ajaxRequest('DELETE', '/bars/db?appt=' + keyS, false, function (response2) {
 
-						let pareOut = document.querySelector("#appts-view");
+						let pareOut = document.querySelector("#trades-view");
 						pareOut.removeChild(pareOut.querySelector('[appt-key=\"' + keyS + '\"').parentNode.parentNode.parentNode);
 
 						zat.querySelector(".show-text").innerHTML = "click to book...";
