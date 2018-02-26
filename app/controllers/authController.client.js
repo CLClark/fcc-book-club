@@ -61,8 +61,8 @@ var AUTHLIB = AUTHLIB || (function () {
 				// apiIcon.replaceWith(makeAPIDiv());
 			}
 			/**set the search bar */
-			let clubSearch =  document.querySelector("#zipSearch");
-			let bookSearch =  document.querySelector("#gipSearch");
+			let clubSearch = document.querySelector("#zipSearch");
+			let bookSearch = document.querySelector("#gipSearch");
 			// clubSearch.setAttribute("style", "display: none");
 
 			/**clock maker */
@@ -125,7 +125,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				}
 			}
 
-			/**listener for refresher */	
+			/**listener for refresher */
 			let refresher = document.querySelector('#fresh-appts');
 			if (refresher !== null) {
 				refresher.addEventListener('click', () => {
@@ -144,472 +144,490 @@ var AUTHLIB = AUTHLIB || (function () {
 			}//refresher if
 
 		},
-		
+
+		finale: function () {
+			let tradesBtn = document.querySelector("#my-trades");
+			//execute setup functions based on path
+			//trades
+			if (window.location.search == "?trades" && tradesBtn !== null) {
+				tradesBtn.dispatchEvent(new MouseEvent("click"));
+			}
+		},
+
 		authScript: function (zipIt) {
+			return new Promise((resolve, reject) => {
 
-			/**profile logout div "login-nav" */
-			function makeDiv() {
-				var newSpan2 = document.createElement("div");
-				newSpan2.id = "login-nav";
-				var aPro1 = document.createElement("a");
-				aPro1.className = "menu";
-				aPro1.href = "/profile";
-				aPro1.innerHTML = "my Profile";
-				var aLog1 = document.createElement("a");
-				aLog1.className = "menu";
-				aLog1.href = "/logout";
-				aLog1.innerHTML = "Logout";
-				var pBar = document.createElement("p");
-				pBar.innerHTML = "|";
-				newSpan2.appendChild(aPro1);
-				newSpan2.appendChild(pBar);
-				newSpan2.appendChild(aLog1);
-				return newSpan2;
-			}
-			/**login sign-in div  "login-nav"*/
-			function makeDefaultDiv() {
-				var newSpan = document.createElement("div");
-				newSpan.id = "login-nav";
-				var aPro = document.createElement("a");
-				var aLog = document.createElement("div");
-				aLog.className = "btn";
-				aLog.id = "login-btn";
-				var iBar = document.createElement("img");
-				iBar.width = "24";
-				iBar.height = "24";
-				iBar.src = "https://static.xx.fbcdn.net/rsrc.php/v3/yC/r/aMltqKRlCHD.png";
-				iBar.alt = "app-facebook";
-				var pText = document.createElement("p");
-				pText.innerHTML = "Sign in with Facebook";
-				newSpan.appendChild(aPro);
-				aPro.appendChild(aLog);
-				aLog.appendChild(iBar);
-				aLog.appendChild(pText);
-				return newSpan;
 
-			}
-			//resets navigator placeholder when a new auth call is made
-			function resetNavi() {
-				var resetSpan = document.createElement("span");
-				resetSpan.id = "auth-container";
-				return resetSpan;
-			}
-			/**ask node.js if user is authenticated */
-			ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', apiAuth, 8000, function (err, data, status) {
-				//reset navi for new auth call
-				let resetAttempt = document.querySelector("#login-nav");
-				if (resetAttempt !== null) {
-					resetAttempt.replaceWith(resetNavi());
+				/**profile logout div "login-nav" */
+				function makeDiv() {
+					var newSpan2 = document.createElement("div");
+					newSpan2.id = "login-nav";
+					var aPro1 = document.createElement("a");
+					aPro1.className = "menu";
+					aPro1.href = "/profile";
+					aPro1.innerHTML = "my Profile";
+					var aLog1 = document.createElement("a");
+					aLog1.className = "menu";
+					aLog1.href = "/logout";
+					aLog1.innerHTML = "Logout";
+					var pBar = document.createElement("p");
+					pBar.innerHTML = "|";
+					newSpan2.appendChild(aPro1);
+					newSpan2.appendChild(pBar);
+					newSpan2.appendChild(aLog1);
+					return newSpan2;
 				}
-				//server response to authentication check		
-				var authObj = JSON.parse(data);
-				if(authObj == null){ console.log("auth check null "); return;}
+				/**login sign-in div  "login-nav"*/
+				function makeDefaultDiv() {
+					var newSpan = document.createElement("div");
+					newSpan.id = "login-nav";
+					var aPro = document.createElement("a");
+					var aLog = document.createElement("div");
+					aLog.className = "btn";
+					aLog.id = "login-btn";
+					var iBar = document.createElement("img");
+					iBar.width = "24";
+					iBar.height = "24";
+					iBar.src = "https://static.xx.fbcdn.net/rsrc.php/v3/yC/r/aMltqKRlCHD.png";
+					iBar.alt = "app-facebook";
+					var pText = document.createElement("p");
+					pText.innerHTML = "Sign in with Facebook";
+					newSpan.appendChild(aPro);
+					aPro.appendChild(aLog);
+					aLog.appendChild(iBar);
+					aLog.appendChild(pText);
+					return newSpan;
 
-				var authNode = document.getElementById('auth-container');
-				/* default search bar function, used in nightlife app
-					var reg = new RegExp('^(\\d\\d\\d\\d\\d)$');
-					if (reg.test(authObj.zipStore) && zipIt) {
-					//zipIt prevents search when authScript called elsewhere
-						var keyup = new Event('keyup');
-						document.querySelector('#zipSearch').value = authObj.zipStore;
-						document.querySelector('input#zipSearch').dispatchEvent(keyup);				
+				}
+				//resets navigator placeholder when a new auth call is made
+				function resetNavi() {
+					var resetSpan = document.createElement("span");
+					resetSpan.id = "auth-container";
+					return resetSpan;
+				}
+				/**ask node.js if user is authenticated */
+				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', apiAuth, 8000, function (err, data, status) {
+					//reset navi for new auth call
+					let resetAttempt = document.querySelector("#login-nav");
+					if (resetAttempt !== null) {
+						resetAttempt.replaceWith(resetNavi());
 					}
-				*/
-				let navi = document.querySelector("#navi");
-				//if user is authenticated:
-				if (authObj.authStatus == 1) {
-					//"login-nav" div (profile | sign out)
-					authNode.replaceWith(makeDiv()); 
-					let dName = document.querySelector("#display-name");
-					if(dName !== null){
-						dName.innerHTML = (", <br>" + authObj.displayName);
-					}
-					descriptUser(authObj);
-					/* 	if (document.querySelector("#appts-img") == null) {
-						document.querySelector("#trades-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
-					}*/
-					//add "My Books" div
-					navi.appendChild(makeMyBooks());
-					//add listener
-					var booksBtn = document.querySelector("#my-books");
-					booksBtn.addEventListener("click",myBooksFn,false);
-					//TODO: add "My Trades" div
-					navi.appendChild(makeMyTrades());
-					//add listener
-					var tradesBtn = document.querySelector("#my-trades");
-					tradesBtn.addEventListener("click", myTradesFn, false);
-					//search book club
-					navi.appendChild(makeSearchClub());
-					var clubBtn = document.querySelector("#search-club");
-					clubBtn.addEventListener("click", searchClub, false);
-					//add Books
-					navi.appendChild(makeAddBooks());
-					var addsBtn = document.querySelector("#add-books");
-					addsBtn.addEventListener("click", addBooks, false);
-				}
-				//if user is not authenticated
-				else {
-					//remove appts div "profile-container" because "not authed"
-					document.querySelector('#profile-container').remove();
-					if (authNode !== null) {
-					//add the facebook "sign in" button
-						authNode.replaceWith(makeDefaultDiv());
-						document.querySelector('#login-btn').addEventListener('click', function () {
-							location.replace('/auth/facebook');
-						});
-					}
-					//remove lockpic
-					loader(false);
-				}//authObj.authStatus else
-			}));
-			
-			//fills in the profile data
-			function descriptUser(userData){
-				let profId = document.querySelector("#profile-id");
-				let profUser = document.querySelector("#profile-username");
-				let profCity = document.querySelector("#profile-city");
-				let profState = document.querySelector("#profile-state");
-				if(profId !== null){
-					profId.innerHTML = (userData.userId);
-				}
-				if(profUser !== null){
-					profUser.innerHTML = (userData.displayName);
-				}
-				if(profCity !== null){
-					profCity.innerHTML = (userData.city);
-				}
-				if(profState !== null){
-					profState.innerHTML = (userData.state);
-				}
-			}
+					//server response to authentication check		
+					var authObj = JSON.parse(data);
+					if (authObj == null) { console.log("auth check null "); return; }
 
-			function tabColourer(selectedTab){
-				let tabs = document.querySelectorAll(".navicon");
-				tabs.forEach((thisTab) => {
-					thisTab.setAttribute("style","opacity: .7");
-				});
-				let fullOpacity = document.querySelector( ("#") + selectedTab);
-				fullOpacity.setAttribute("style", "");
-			}
-
-			function makeMyBooks(){
-				//<div id="api-icon" class="navicon">API ICON</div>
-				let newDiv = document.createElement("div");
-				newDiv.id = "my-books";
-				newDiv.className = "navicon";
-				let aPro1 = document.createElement("a");
-				aPro1.className = "tab";
-				//href not used, event listener instead
-				// aPro1.href = "/my-books";
-				aPro1.innerHTML = "My Books";
-				newDiv.appendChild(aPro1);
-				return newDiv;
-			}//makeMyBooks
-			function makeMyTrades(){
-				let newDiv = document.createElement("div");
-				newDiv.id = "my-trades";
-				newDiv.className = "navicon";
-				let aPro1 = document.createElement("a");
-				aPro1.className = "tab";
-				//href not used, event listener instead
-				// aPro1.href = "/my-trades";
-				aPro1.innerHTML = "My Trades";
-				newDiv.appendChild(aPro1);
-
-				var tradeNavi = document.querySelector("#trades-navi");
-				if(tradeNavi !== null){
-					tradeNavi.addEventListener("click",hideButton.bind(tradeNavi),false);
-				}			
-
-				function hideButton(){
-					var trades = document.querySelector("#trades-view");
-					if(trades !== null)					{
-						if (this.innerHTML == "Show Trades"){					
-							trades.setAttribute("style", "display: unset");
-							trades.setAttribute("show-status",true);
-							this.innerHTML = "Hide Trades?";
-						} else {
-							trades.setAttribute("style", "display: none");
-							trades.setAttribute("show-status",false);
-							this.innerHTML = "Show Trades";	
+					var authNode = document.getElementById('auth-container');
+					/* default search bar function, used in nightlife app
+						var reg = new RegExp('^(\\d\\d\\d\\d\\d)$');
+						if (reg.test(authObj.zipStore) && zipIt) {
+						//zipIt prevents search when authScript called elsewhere
+							var keyup = new Event('keyup');
+							document.querySelector('#zipSearch').value = authObj.zipStore;
+							document.querySelector('input#zipSearch').dispatchEvent(keyup);				
 						}
-					}										
-				}
-				
-				return newDiv;				
-			}//makeMyTrades
-			//execute on btn click
-			function myBooksFn (){
-				tabColourer("my-books");
-				//2. query node for user books
-				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
-					var booksFound = JSON.parse(data);
-					if(err){console.log(err)}
-					else if(booksFound["booksFound"] == "none"){
-						let place = document.querySelector("#poll-view");
-						place.innerHTML = "No books found.";
-					}
-					else{
-						let resultNote = document.querySelector("#results-text");
-						resultNote.innerHTML = "My Books: ";
-						// console.log(booksFound);
-						divCB(booksFound, 'poll-view', {classText: "owned-book", controls: "delete"}, null);						
-					}					
-					//1. declare results div
-					//3. display books as results					
-					//4. display corollary divs+functions (delete, add, etc)
-					// console.log(data);
-				}));//ajax call				
-			}
-			function myTradesFn() {
-				//GUI notification
-				tabColourer("my-trades");
-				//Inform User, app is "loading..."
-				var tempText = document.querySelector("#trades-text");
-				//show the trades list...
-				if(document.querySelector("#trades-view").getAttribute("show-status") == "false"){
-					document.querySelector("#trades-navi").dispatchEvent(new MouseEvent("click"));
-				}				
-				var proCon = document.querySelector("#profile-container") || null;
+					*/
+					let navi = document.querySelector("#navi");
+					//if user is authenticated:
+					if (authObj.authStatus == 1) {
+						//"login-nav" div (profile | sign out)
+						authNode.replaceWith(makeDiv());
+						let dName = document.querySelector("#display-name");
+						if (dName !== null) {
+							dName.innerHTML = (", <br>" + authObj.displayName);
+						}
+						descriptUser(authObj);
+						/* 	if (document.querySelector("#appts-img") == null) {
+							document.querySelector("#trades-navi").insertBefore(makeAppts("My Appointments:"), document.querySelector("#fresh-appts"));
+						}*/
+						//add "My Books" div
+						navi.appendChild(makeMyBooks());
+						//add listener
+						var booksBtn = document.querySelector("#my-books");
+						booksBtn.addEventListener("click", myBooksFn, false);
+						//TODO: add "My Trades" div
+						navi.appendChild(makeMyTrades());
+						//add listener
+						var tradesBtn = document.querySelector("#my-trades");
+						resolve(tradesBtn.addEventListener("click", myTradesFn, false));
 
-				if (tempText !== null) {
-					tempText.innerHTML = "Loading...";					
-					// loader(true); //toggle lock pic
-				}
-				//query server
-				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-trades', 8000, function (err, data, status) {
-					if (tempText !== null) { tempText.innerHTML = "My Trades:"; }
-					console.log(data);
-					var tradesFound = JSON.parse(data);
-					
-					renderTrades(tradesFound);
-				}));//ajax call	
-				
-				function renderTrades(tradeData){									
-					//no "new" bars compared to pre-delete					 
-					if (tradeData.tradesFound == "none") {
-						proCon.setAttribute("style", "display: unset");
-						// proCon.appendChild(makeAppts("none found"));						
-						// loader(false);		//lockpic off			
-					}//Found some appointments
+						//search book club
+						navi.appendChild(makeSearchClub());
+						var clubBtn = document.querySelector("#search-club");
+						clubBtn.addEventListener("click", searchClub, false);
+						//add Books
+						navi.appendChild(makeAddBooks());
+						var addsBtn = document.querySelector("#add-books");
+						addsBtn.addEventListener("click", addBooks, false);
+					}
+					//if user is not authenticated
 					else {
-						proCon.setAttribute("style", "display: unset");
-						//third arg is div class //divCB is called within barFormer.addElement
-						tradeData.sort(function (a, b) {
-							let aTime = new Date(a.appt["date_proposed"]);
-							let bTime = new Date(b.appt["date_proposed"]);
-							return aTime.getTime() - bTime.getTime();
-						});
-						divCB(tradeData, "trades-view", { "classText": " trade" }, null);
-						// addDeleteDiv();						
-						// loader(false); //toggle lock pic
+						//remove appts div "profile-container" because "not authed"
+						document.querySelector('#profile-container').remove();
+						if (authNode !== null) {
+							//add the facebook "sign in" button
+							authNode.replaceWith(makeDefaultDiv());
+							document.querySelector('#login-btn').addEventListener('click', function () {
+								location.replace('/auth/facebook');
+							});
+						}
+						//remove lockpic
+						loader(false);
+					}//authObj.authStatus else
+				}));
+
+				//fills in the profile data
+				function descriptUser(userData) {
+					let profId = document.querySelector("#profile-id");
+					let profUser = document.querySelector("#profile-username");
+					let profCity = document.querySelector("#profile-city");
+					let profState = document.querySelector("#profile-state");
+					if (profId !== null) {
+						profId.innerHTML = (userData.userId);
 					}
-					//unspin the icon
-					// let refreshIcon = document.querySelector('#fresh-appts')
-					// refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
-					/****** */
-				/* let profSpace = document.querySelector("#profile-container");
-					profSpace.setAttribute("style", "display: unset");
-					// let tradesList = document.querySelector("#trades-view");
-					// let holder = document.createElement("div");
-					// holder.innerHTML = tradeData;
-					// tradesList.appendChild(holder);
-					let tO = [{ title: tradeData}];
-					// let tempJson = JSON.parse(tO.toString());
-					divCB(tO, 'trades-view', {classText: "trade", controls: null}, null);	
-				*/
+					if (profUser !== null) {
+						profUser.innerHTML = (userData.displayName);
+					}
+					if (profCity !== null) {
+						profCity.innerHTML = (userData.city);
+					}
+					if (profState !== null) {
+						profState.innerHTML = (userData.state);
+					}
 				}
 
-			}//myTradesFn
+				function tabColourer(selectedTab) {
+					let tabs = document.querySelectorAll(".navicon");
+					tabs.forEach((thisTab) => {
+						thisTab.setAttribute("style", "opacity: .7");
+					});
+					let fullOpacity = document.querySelector(("#") + selectedTab);
+					fullOpacity.setAttribute("style", "");
+				}
 
-			function makeAddBooks(){
-				let newDiv = document.createElement("div");
-				newDiv.id = "add-books";
-				newDiv.className = "navicon";
-				let aPro1 = document.createElement("a");
-				aPro1.className = "tab";
-				//href not used, event listener instead
-				// aPro1.href = "/my-trades";
-				aPro1.innerHTML = "Add Your <br> Book";
-				newDiv.appendChild(aPro1);
-				return newDiv;				
-			}//makeAddBooks
-			function addBooks(){
-				tabColourer("add-books");
-				//hide all unused search bars:
-				let allBars = document.querySelectorAll(".sbar");
-				allBars.forEach((searchBar) => {
-					searchBar.setAttribute("style","display: none");
-				});
-				//show our bar:
-				document.querySelector("#gipSearch").setAttribute("style","display: unset");
-				//1. replace search bar with "google api search"
-				//2. add google search
-				//3. form results with listeners(or hrefs) = > server handle add books
-				// ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
+				function makeMyBooks() {
+					//<div id="api-icon" class="navicon">API ICON</div>
+					let newDiv = document.createElement("div");
+					newDiv.id = "my-books";
+					newDiv.className = "navicon";
+					let aPro1 = document.createElement("a");
+					aPro1.className = "tab";
+					//href not used, event listener instead
+					// aPro1.href = "/my-books";
+					aPro1.innerHTML = "My Books";
+					newDiv.appendChild(aPro1);
+					return newDiv;
+				}//makeMyBooks
+				function makeMyTrades() {
+					let newDiv = document.createElement("div");
+					newDiv.id = "my-trades";
+					newDiv.className = "navicon";
+					let aPro1 = document.createElement("a");
+					aPro1.className = "tab";
+					//href not used, event listener instead
+					// aPro1.href = "/my-trades";
+					aPro1.innerHTML = "My Trades";
+					newDiv.appendChild(aPro1);
+
+					//add listener for profile page
+					var tradeNavi = document.querySelector("#trades-navi");
+					if (tradeNavi !== null) {
+						tradeNavi.addEventListener("click", hideButton.bind(tradeNavi), false);
+					}
+					function hideButton() {
+						var trades = document.querySelector("#trades-view");
+						if (trades !== null) {
+							if (this.innerHTML == "Show Trades") {
+								trades.setAttribute("style", "display: unset");
+								trades.setAttribute("show-status", true);
+								this.innerHTML = "Hide Trades?";
+							} else {
+								trades.setAttribute("style", "display: none");
+								trades.setAttribute("show-status", false);
+								this.innerHTML = "Show Trades";
+							}
+						}
+					}//hideButton fn				
+
+					return newDiv;
+				}//makeMyTrades
+				//execute on btn click
+				function myBooksFn() {
+					tabColourer("my-books");
+					//2. query node for user books
+					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
+						var booksFound = JSON.parse(data);
+						if (err) { console.log(err) }
+						else if (booksFound["booksFound"] == "none") {
+							let place = document.querySelector("#poll-view");
+							place.innerHTML = "No books found.";
+						}
+						else {
+							let resultNote = document.querySelector("#results-text");
+							resultNote.innerHTML = "My Books: ";
+							// console.log(booksFound);
+							divCB(booksFound, 'poll-view', { classText: "owned-book", controls: "delete" }, null);
+						}
+						//1. declare results div
+						//3. display books as results					
+						//4. display corollary divs+functions (delete, add, etc)
+						// console.log(data);
+					}));//ajax call				
+				}
+				function myTradesFn() {
+					//redirect to profile if not there...
+					if (window.location.pathname !== '/profile' && window.location.pathname !== '/profile?trades') {
+						window.location = "/profile?trades";
+					} else {
+						// console.log(window.location); //testing
+						//GUI notification
+						tabColourer("my-trades");
+						//Inform User, app is "loading..."
+						var tempText = document.querySelector("#trades-text");
+						//show the trades list...
+						if (document.querySelector("#trades-view").getAttribute("show-status") == "false") {
+							document.querySelector("#trades-navi").dispatchEvent(new MouseEvent("click"));
+						}
+						var proCon = document.querySelector("#profile-container") || null;
+
+						if (tempText !== null) {
+							tempText.innerHTML = "Loading...";
+							// loader(true); //toggle lock pic
+						}
+						//query server
+						ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-trades', 8000, function (err, data, status) {
+							if (tempText !== null) { tempText.innerHTML = "My Trades:"; }
+							console.log(data);
+							var tradesFound = JSON.parse(data);
+
+							renderTrades(tradesFound);
+						}));//ajax call	
+
+						function renderTrades(tradeData) {
+							//no "new" bars compared to pre-delete					 
+							if (tradeData.tradesFound == "none") {
+								proCon.setAttribute("style", "display: unset");
+								// proCon.appendChild(makeAppts("none found"));						
+								// loader(false);		//lockpic off			
+							}//Found some appointments
+							else {
+								proCon.setAttribute("style", "display: unset");
+								//third arg is div class //divCB is called within barFormer.addElement
+								tradeData.sort(function (a, b) {
+									let aTime = new Date(a.appt["date_proposed"]);
+									let bTime = new Date(b.appt["date_proposed"]);
+									return aTime.getTime() - bTime.getTime();
+								});
+								divCB(tradeData, "trades-view", { "classText": " trade" }, null);
+								// addDeleteDiv();						
+								// loader(false); //toggle lock pic
+							}
+							//unspin the icon
+							// let refreshIcon = document.querySelector('#fresh-appts')
+							// refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
+							/****** */
+							/* let profSpace = document.querySelector("#profile-container");
+								profSpace.setAttribute("style", "display: unset");
+								// let tradesList = document.querySelector("#trades-view");
+								// let holder = document.createElement("div");
+								// holder.innerHTML = tradeData;
+								// tradesList.appendChild(holder);
+								let tO = [{ title: tradeData}];
+								// let tempJson = JSON.parse(tO.toString());
+								divCB(tO, 'trades-view', {classText: "trade", controls: null}, null);	
+							*/
+						}
+					}
+				}//myTradesFn
+
+				function makeAddBooks() {
+					let newDiv = document.createElement("div");
+					newDiv.id = "add-books";
+					newDiv.className = "navicon";
+					let aPro1 = document.createElement("a");
+					aPro1.className = "tab";
+					//href not used, event listener instead
+					// aPro1.href = "/my-trades";
+					aPro1.innerHTML = "Add Your <br> Book";
+					newDiv.appendChild(aPro1);
+					return newDiv;
+				}//makeAddBooks
+				function addBooks() {
+					tabColourer("add-books");
+					//hide all unused search bars:
+					let allBars = document.querySelectorAll(".sbar");
+					allBars.forEach((searchBar) => {
+						searchBar.setAttribute("style", "display: none");
+					});
+					//show our bar:
+					document.querySelector("#gipSearch").setAttribute("style", "display: unset");
+					//1. replace search bar with "google api search"
+					//2. add google search
+					//3. form results with listeners(or hrefs) = > server handle add books
+					// ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
 					//1. declare results div			
 					//3. display books as results
 					//4. display corollary divs+functions (delete, add, etc)
 					// process(data);
-				// }));//ajax call				
-			}
-			function makeSearchClub(){
-				let newDiv = document.createElement("div");
-				newDiv.id = "search-club";
-				newDiv.className = "navicon";
-				let aPro1 = document.createElement("a");
-				aPro1.className = "tab";
-				//href not used, event listener instead				
-				aPro1.innerHTML = "Search our <br> Books";
-				newDiv.appendChild(aPro1);
-				return newDiv;				
-			}//makeSearchClub
+					// }));//ajax call				
+				}
+				function makeSearchClub() {
+					let newDiv = document.createElement("div");
+					newDiv.id = "search-club";
+					newDiv.className = "navicon";
+					let aPro1 = document.createElement("a");
+					aPro1.className = "tab";
+					//href not used, event listener instead				
+					aPro1.innerHTML = "Search our <br> Books";
+					newDiv.appendChild(aPro1);
+					return newDiv;
+				}//makeSearchClub
 
-			function searchClub(){
-				tabColourer("search-club");
-				//hide all unused bars:
-				let allBars = document.querySelectorAll(".sbar");
-				allBars.forEach((searchBar) => {
-					searchBar.setAttribute("style","display: none");
-				});
-				//show our bar:
-				document.querySelector("#zipSearch").setAttribute("style","display: unset");		
-			}
-
-			/**			 
-			 * @param {String} addText 
-			 */
-			function makeAppts(addText) {
-				var newSpanTxt = document.createElement("img");
-				//				newSpanTxt.className = "alternate";
-				newSpanTxt.id = "appts-img";
-				newSpanTxt.src = "public/img/myappointments.png";
-				newSpanTxt.alt = "My Appointments: " + addText;
-				newSpanTxt.addEventListener('click', () => {
-					let clickEv = new Event('click');
-					document.querySelector("#fresh-appts").dispatchEvent(clickEv);
-				}, false);
-				return newSpanTxt;
-			}//makeAppts return
-
-			//query server for my appointments
-			function apptFind() {
-				//Inform User, app is "loading..."
-				var tempText = document.querySelector("#appts-text");
-				if (tempText !== null) {
-					tempText.innerHTML = "Loading...";
-					//toggle lock pic
-					loader(true);
+				function searchClub() {
+					tabColourer("search-club");
+					//hide all unused bars:
+					let allBars = document.querySelectorAll(".sbar");
+					allBars.forEach((searchBar) => {
+						searchBar.setAttribute("style", "display: none");
+					});
+					//show our bar:
+					document.querySelector("#zipSearch").setAttribute("style", "display: unset");
 				}
 
-				//appointment functions
-				var proCon = document.querySelector("#profile-container") || null;
-				var request = ('/bars/db?');
-				//1. find appts loaded on current page
-				var haveAppts = document.querySelector("#trades-view");
-				var hApptsList = haveAppts.querySelectorAll(".poll-view-list-poll");
-				var ak2Add = [];
-				let qString;
+				/**			 
+				 * @param {String} addText 
+				 */
+				function makeAppts(addText) {
+					var newSpanTxt = document.createElement("img");
+					//				newSpanTxt.className = "alternate";
+					newSpanTxt.id = "appts-img";
+					newSpanTxt.src = "public/img/myappointments.png";
+					newSpanTxt.alt = "My Appointments: " + addText;
+					newSpanTxt.addEventListener('click', () => {
+						let clickEv = new Event('click');
+						document.querySelector("#fresh-appts").dispatchEvent(clickEv);
+					}, false);
+					return newSpanTxt;
+				}//makeAppts return
 
-				for (var i = 0; i < hApptsList.length; i++) {
-					let ak = hApptsList[i].getAttribute("appt-key");
-					if (ak !== null) {
-						ak2Add.push("appts[]=" + ak);
-					}
-				}
-				if (ak2Add.length > 0) {
-					qString = ak2Add.join("&");
-					request += qString;
-				}
-				//2. get appt-key of those appts
-				//3. append the appt-keys to the request path
-				//4. xhr
-
-				/** GET /bars/db?appts[]= */				
-				ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, false, function (data) {
-					if (tempText !== null) { tempText.innerHTML = "My Appointments:"; }
-					var apptsFound = JSON.parse(data);
-					console.log(apptsFound);
-					//no "new" bars compared to pre-delete					 
-					if (apptsFound.barsFound == "none") {
-						proCon.setAttribute("style", "display: unset");
-						// proCon.appendChild(makeAppts("none found"));						
-						loader(false);		//lockpic off			
-					}
-					//Found some appointments
-					else {
-						proCon.setAttribute("style", "display: unset");
-						//third arg is div class //divCB is called within barFormer.addElement
-						apptsFound.sort(function (a, b) {
-							let aTime = new Date(a.appt["timestamp"]);
-							let bTime = new Date(b.appt["timestamp"]);
-							return aTime.getTime() - bTime.getTime();
-						});
-						divCB(apptsFound, "trades-view", { "classText": " appt-wrap-sup" }, null);
-						addDeleteDiv();
+				//query server for my appointments
+				function apptFind() {
+					//Inform User, app is "loading..."
+					var tempText = document.querySelector("#appts-text");
+					if (tempText !== null) {
+						tempText.innerHTML = "Loading...";
 						//toggle lock pic
-						loader(false);
+						loader(true);
 					}
-					//unspin the icon
-					let refreshIcon = document.querySelector('#fresh-appts')
-					refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
-				}));
 
-				/**add a delete btn for each poll */
-				function addDeleteDiv() {
-					var pWrapSup = document.querySelectorAll(".appt-wrap-sup") || null;
-					for (var pWrapper of pWrapSup) {
-						if (pWrapper.querySelector(".delete-poll") == null) {
-							var deletePoll = document.createElement("div");
-							deletePoll.className = ("delete-poll");
-							var actionDel = document.createElement('a');
-							var pollDataDiv = pWrapper.querySelector(".poll-view-list-poll");
-							var keyOfPoll = pollDataDiv.getAttribute("appt-key");
-							var titleOfPoll = pollDataDiv.getAttribute("poll-title");
-							actionDel.setAttribute("appt-key", keyOfPoll);
-							actionDel.setAttribute("title", titleOfPoll);
-							var pollDel = document.createElement('div');
-							pollDel.className = "btn delete-btn";
-							pollDel.id = "delete-btn";
-							pollDel.innerHTML = "<span class=\"del-text\">remove</span>";
-							pollDel.setAttribute("style", "margin: auto;");
-							actionDel.appendChild(pollDel);
-							deletePoll.appendChild(actionDel);
-							pWrapper.appendChild(deletePoll);
+					//appointment functions
+					var proCon = document.querySelector("#profile-container") || null;
+					var request = ('/bars/db?');
+					//1. find appts loaded on current page
+					var haveAppts = document.querySelector("#trades-view");
+					var hApptsList = haveAppts.querySelectorAll(".poll-view-list-poll");
+					var ak2Add = [];
+					let qString;
 
-							actionDel.addEventListener('click', deleteCB.bind(actionDel), false);
-
-							function deleteCB() {
-								var keyS = this.getAttribute("appt-key");
-								var titleS = this.title;
-								var confirmDel = confirm("Expire your appointment: " + titleS + "?");
-								let that = this;
-								if (confirmDel == true) {
-									ajaxFunctions.ajaxRequestLim('DELETE', '/bars/db?appt=' + keyS, 5000, function (err, response, status) {
-										if (err) { console.log("request error \'delete\'"); }
-										else {
-											let nodeToRemove = that.parentNode.parentNode;
-											if (nodeToRemove.className == "poll-wrap-sup appt-wrap-sup") {
-												let nPare = nodeToRemove.parentNode;
-												nPare.removeChild(nodeToRemove);
-											}
-											let pollRoot = document.querySelector("#poll-view");
-											let resetThis = pollRoot.querySelector("div[appt-key='" + keyS + "']");
-											//existing super-bar node
-											if (resetThis !== null) {
-												resetThis.setAttribute("style", "");
-												resetThis.querySelector(".show-text").innerHTML = "click to book...";
-												resetThis.querySelector(".show-text").setAttribute("style", "");
-												resetThis.removeAttribute("appt-key");
-											}
-										}//else err
-									});
-								}
-							}//deleteCB
-						}//has .delete div child
+					for (var i = 0; i < hApptsList.length; i++) {
+						let ak = hApptsList[i].getAttribute("appt-key");
+						if (ak !== null) {
+							ak2Add.push("appts[]=" + ak);
+						}
 					}
-				}//function addDeelteteltelteltlet
-			}//apptFind()
+					if (ak2Add.length > 0) {
+						qString = ak2Add.join("&");
+						request += qString;
+					}
+					//2. get appt-key of those appts
+					//3. append the appt-keys to the request path
+					//4. xhr
+
+					/** GET /bars/db?appts[]= */
+					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, false, function (data) {
+						if (tempText !== null) { tempText.innerHTML = "My Appointments:"; }
+						var apptsFound = JSON.parse(data);
+						console.log(apptsFound);
+						//no "new" bars compared to pre-delete					 
+						if (apptsFound.barsFound == "none") {
+							proCon.setAttribute("style", "display: unset");
+							// proCon.appendChild(makeAppts("none found"));						
+							loader(false);		//lockpic off			
+						}
+						//Found some appointments
+						else {
+							proCon.setAttribute("style", "display: unset");
+							//third arg is div class //divCB is called within barFormer.addElement
+							apptsFound.sort(function (a, b) {
+								let aTime = new Date(a.appt["timestamp"]);
+								let bTime = new Date(b.appt["timestamp"]);
+								return aTime.getTime() - bTime.getTime();
+							});
+							divCB(apptsFound, "trades-view", { "classText": " appt-wrap-sup" }, null);
+							addDeleteDiv();
+							//toggle lock pic
+							loader(false);
+						}
+						//unspin the icon
+						let refreshIcon = document.querySelector('#fresh-appts')
+						refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
+					}));
+
+					/**add a delete btn for each poll */
+					function addDeleteDiv() {
+						var pWrapSup = document.querySelectorAll(".appt-wrap-sup") || null;
+						for (var pWrapper of pWrapSup) {
+							if (pWrapper.querySelector(".delete-poll") == null) {
+								var deletePoll = document.createElement("div");
+								deletePoll.className = ("delete-poll");
+								var actionDel = document.createElement('a');
+								var pollDataDiv = pWrapper.querySelector(".poll-view-list-poll");
+								var keyOfPoll = pollDataDiv.getAttribute("appt-key");
+								var titleOfPoll = pollDataDiv.getAttribute("poll-title");
+								actionDel.setAttribute("appt-key", keyOfPoll);
+								actionDel.setAttribute("title", titleOfPoll);
+								var pollDel = document.createElement('div');
+								pollDel.className = "btn delete-btn";
+								pollDel.id = "delete-btn";
+								pollDel.innerHTML = "<span class=\"del-text\">remove</span>";
+								pollDel.setAttribute("style", "margin: auto;");
+								actionDel.appendChild(pollDel);
+								deletePoll.appendChild(actionDel);
+								pWrapper.appendChild(deletePoll);
+
+								actionDel.addEventListener('click', deleteCB.bind(actionDel), false);
+
+								function deleteCB() {
+									var keyS = this.getAttribute("appt-key");
+									var titleS = this.title;
+									var confirmDel = confirm("Expire your appointment: " + titleS + "?");
+									let that = this;
+									if (confirmDel == true) {
+										ajaxFunctions.ajaxRequestLim('DELETE', '/bars/db?appt=' + keyS, 5000, function (err, response, status) {
+											if (err) { console.log("request error \'delete\'"); }
+											else {
+												let nodeToRemove = that.parentNode.parentNode;
+												if (nodeToRemove.className == "poll-wrap-sup appt-wrap-sup") {
+													let nPare = nodeToRemove.parentNode;
+													nPare.removeChild(nodeToRemove);
+												}
+												let pollRoot = document.querySelector("#poll-view");
+												let resetThis = pollRoot.querySelector("div[appt-key='" + keyS + "']");
+												//existing super-bar node
+												if (resetThis !== null) {
+													resetThis.setAttribute("style", "");
+													resetThis.querySelector(".show-text").innerHTML = "click to book...";
+													resetThis.querySelector(".show-text").setAttribute("style", "");
+													resetThis.removeAttribute("appt-key");
+												}
+											}//else err
+										});
+									}
+								}//deleteCB
+							}//has .delete div child
+						}
+					}//function addDeelteteltelteltlet
+				}//apptFind()
+			});
 		},
 
 		fbControl: function (cb) {
