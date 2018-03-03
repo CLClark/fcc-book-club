@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>books Club: FCC Book Club App</title>
+
+	<link href="/public/css/main.css" rel="stylesheet" type="text/css">
+	<!--Load the AJAX API-->
+	<script type="text/javascript" src="common/ajax-functions.js"></script>
+	<script type="text/javascript" src="controllers/authController.client.js"></script>
+	<script type="text/javascript" src="controllers/bookController.client.js"></script>
+	<script type="text/javascript" src="controllers/tradeController.client.js"></script>
+	<script type="text/javascript">
+		MYLIBRARY.init([MYLIBRARY.bookFormer, null, null]);
+		TRADES.init([MYLIBRARY.bookFormer, TRADES.resHandler, null]);
+	</script>
+
+</head>
+<header></header>
+
+<body>
+	<div id="fb-root">
+	</div>
+
+	<div id="navi-container" class="container">
+
+		<div id="searchResults">Google Books
+			<br>search results</div>
+
+		<div id="navi" class="navi-menu">
+			<!-- <div id="api-icon" class="navicon">API ICON</div> -->
+			<div class="container" id="welcome-container">
+				<div id="welcome-text" class="naviconZ">
+					<p>Welcome to Books Club
+						<span id="display-name"></span>!</p>
+				</div>
+				<span id="auth-container">
+				</span>
+				<br>
+				<div class="fb-login-button" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false"
+				 data-auto-logout-link="true" data-use-continue-as="false">
+				</div>
+				<div id="status"></div>
+			</div>
+		</div>
+		<!-- <div id="clock">
+			<h3 id="clock-time">
+				tick' tock'
+			</h3>
+		</div> -->
+	</div>
+
+	<div class="container club-profile">
+
+		<!-- <form id="tradefrm" action="/trade" method="post"> -->
+		<div id="tradefrm">
+			<div class="trades-wrap">
+				<div class=" description">ID: </div>
+				<div id="profile-id" class=" trades-value">10108368638468270</div>
+				<div id="userid-dummy" class=" formspace">
+					<input value="Update?" type="submit">
+					<!-- <input onclick="myFunction()" value="Update?" type="button"> -->
+				</div>
+			</div>
+
+			<div id="books-trade" class="container">				
+
+				<div id="left-book" class="trade">
+					<div class="poll-wrap-sup" id="wrap-null">
+						<div class="poll-wrap-info">
+							<div class="poll-title"></div>
+						</div>
+					</div>
+					<div class="trades-wrap">
+						<div class="description">Requested Book: </div>
+						<div id="profile-city" class="trade-value">Atlanta</div>
+					</div>
+					<div class="formspace">
+						<input id="reqbook" class="trade-input" name="reqbook" placeholder="book you're requesting..." type="trade-text">
+					</div>
+				</div>
+
+				<div id="right-book" class="trade">
+					<div class="poll-wrap-sup" id="wrap-null">
+						<div class="poll-wrap-info">
+							<div class="poll-title"></div>
+						</div>
+					</div>
+					<div class="trades-wrap">
+						<div class="description">My Book for Trade: </div>
+						<div id="my-book" class="trade-value">Chris Clark</div>
+					</div>
+					<div class="formspace">
+						<input id="probook" class="trade-input" name="probook" placeholder="add your book... (optional)" type="trade-text">
+					</div>
+				</div>
+
+			</div>
+
+			<div class="trades-wrap">
+				<div class=" description">Trade Status: </div>
+				<div id="trade-status" class="trade-value">STATUS OF TRADE HERE</div>
+				<!-- <div class=" formspace">
+					<input name="tstate" placeholder="status... action..." type="trade-text">
+				</div> -->
+			</div>
+			<!-- </form> -->
+		</div>
+
+	</div>
+
+	<div id="profile-container" style="display: none">
+		<div id="trades-navi-wrap" class="trades-navi-wrap">
+			<div id="trades-text-wrap" class="trades-text-wrap">
+				<h3 id="trades-text" class="trades-text"></h3>
+			</div>
+			<div id="trades-navi" class="btn trades-navi">
+				Hide Trades?
+				<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
+			</div>
+			<div id="trades-navi-trade" class="btn trades-navi-trade">
+				Create a New Trade
+			</div>
+		</div>
+		<div id="trades-view">
+		</div>
+		<div id="trades-footer"></div>
+	</div>
+
+	<!-- 	<div class="container center-bar">
+		<a href="/">
+			<div id="home-icon" class="naviconZ">
+			</div>
+		</a>
+		<img id="zip-image" src="public/img/enteryourzip.png" alt="enter your zip:" />
+		<input type="text" id="zipSearch" name="q" class="sbar" placeholder="Search Our Books...">
+		<input type="text" id="gipSearch" name="q" class="sbar" placeholder="Search new books with Google Books API">
+	</div> -->
+
+	<div id="events-sup">
+		<div id="loading" lock="on">
+			<div class="w3-animate-fading">
+				<img id="loading-image" src="public/img/bookslogo.png" alt="Loading..." />
+			</div>
+		</div>
+		<!--LEFT Column (Div that will hold the polls) -->
+		<div class="results-db">
+			<div id="results-navi-wrap" class="trades-navi-wrap">
+				<div id="results-text-wrap" class="trades-text-wrap">
+					<h3 id="results-text"></h3>
+				</div>
+				<div id="results-navi" class="btn trades-navi results-navi">
+					results placeholder
+					<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
+				</div>
+				<div id="results-navi-trade" class="btn trades-navi-trade results-navi">
+					results placeholder II
+				</div>
+			</div>
+			<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
+			<ul id="poll-view-request" class="poll-view-list"></ul>
+		</div>	
+		<!-- RIGHT Column (flex) moved to above book results-->
+		<div class="results-db">
+				<div id="results-navi-wrap" class="trades-navi-wrap">
+					<div id="results-text-wrap" class="trades-text-wrap">
+						<h3 id="results-text"></h3>
+					</div>
+					<div id="results-navi" class="btn trades-navi results-navi">
+						results placeholder
+						<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
+					</div>
+					<div id="results-navi-trade" class="btn trades-navi-trade results-navi">
+						results placeholder II
+					</div>
+				</div>
+				<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
+				<ul id="poll-view" class="poll-view-list"></ul>
+			</div>
+
+	</div>
+
+</body>
+
+<footer>
+	<script type="text/javascript">	
+		AUTHLIB.init([MYLIBRARY.bookFormer, false, AUTHLIB.authScript]);
+		AUTHLIB.navi();
+		AUTHLIB.authScript(false).then(() => {
+			AUTHLIB.finale();
+		}).catch((e) => {
+			console.log(e);
+		});
+		// AUTHLIB.fbControl();
+		// MYLIBRARY.bookAdder(); 
+		// MYLIBRARY.bookFinder();
+		//callback for authscript AUTHLIB.finale();
+		TRADES.myBookForm();
+		TRADES.reqBookForm();
+		// let listenArr = [TRADES.tradeForm(),TRADES.reqForm()];
+		// Promise.all(listenArr).then((resolved) => {
+		// 	TRADES.resHandler();
+		// }).catch((e) => { console.log(e);			
+		// });
+		
+	</script>
+</footer>
+
+</html>

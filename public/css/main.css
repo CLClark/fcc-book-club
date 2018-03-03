@@ -21,8 +21,8 @@ body {
 	font-size: 16px;
 	margin: auto;
 	padding: 0;
-	background-color: #FFFFA5;
-	background-image: url('/public/img/bgpaper.gif');
+	background-color: #abb6ce;
+	/* background-image: url('/public/img/bgpaper.gif'); */
 	max-width: 900px;
 }
 
@@ -190,6 +190,9 @@ header a ~ p {
  left: 50%;
  z-index: 100;
 }
+
+/** trades **/
+
 .trades-navi, #trades-navi{ /* formerly profile-navi*/
   display: inline-block;
   flex: 1;
@@ -223,6 +226,46 @@ header a ~ p {
     border-width: 0 0 2px 0;
     border-style: dashed;
     height: 8px;
+}
+
+#left-book, #right-book, .trade{
+	flex: 1;
+	padding: 0 0 10px 0;
+	background-color: #ffffff50;
+}
+#tradefrm{
+	display: flex;
+	flex-direction: column;
+	padding: 20px 0 20px 0;
+	margin: 20px 0 0 0;
+}
+#books-trade{
+	display: flex;
+	flex-direction: row;
+	margin: 0 0 10px 0;
+}
+.trades-wrap{
+	display: flex;
+	flex-direction: row;
+	border-bottom: gray thin dotted;
+	margin: 10px 10px;
+	justify-content: space-between;
+}
+.trade{
+	flex: 1;
+}
+.trade-value{
+	text-align: start;
+}
+.trade-input{	
+	width: 95%;
+	height: 1.5rem;
+}
+
+/****/
+
+#results-navi, #results-navi-trade{
+	display: none;
 }
 
 #fresh-appts{
@@ -320,6 +363,7 @@ img {
 	width: 95%;
 	table-layout: fixed;
 }
+
 .cell{
 	display: table-cell;
 	height: 1.7rem;
@@ -327,11 +371,12 @@ img {
 	text-align: start;
 }
 .description {
-	/* background-color: #ccc; */
-	width: 13%;
+	/* background-color: #ccc; 
+	width: 13%; */
+	width: 19%;
 	text-align: end;
-padding: 0 10px 0 0;
-font-weight: bold;
+	padding: 0 10px 0 0;
+	font-weight: bold;
 }
 .profile-value {
 	font-weight: 400;
@@ -341,10 +386,9 @@ font-weight: bold;
 	border-bottom: gray thin dotted;
 }
 .formspace{
-	/* width: 20%; */
-	text-align: end;
-	padding: 1px 0 1px 10px;
-	border-bottom: gray thin dotted;
+/* 	width: 95%; */
+	text-align: center;
+	padding: 5px;	
 }
 
 input[type=profile-text] {
@@ -468,6 +512,8 @@ span {
 	padding: 20% 0 5px 0px;
 	height: 100%
 }
+
+
 /* 
 .tab:hover {
 	font-weight:bold;
@@ -491,7 +537,7 @@ span {
 }
 
 /******* poll styles **********/
-#pollDb{
+#pollDb, .results-db{
   flex: 1;
   max-width: 50%;
 }
@@ -608,15 +654,14 @@ span {
  background-color: #02144a; */
 }
 
-#poll-view{
-  /* background-color: #010616; */
+/* #poll-view{
 	margin: 2px 0px;
 	flex-basis: 400px;
 	display: flex;
 	flex-direction: column;
 	flex-wrap: wrap;
 	justify-content: flex-start;	 
-}
+} */
 
 .poll-view-list{
   padding: 5px 2% 10px 2%;  

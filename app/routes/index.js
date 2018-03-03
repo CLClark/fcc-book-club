@@ -119,6 +119,11 @@ module.exports = function (app, passport) {
 	app.route('/my-trades')
 		.get(isLoggedIn, booksHandler.myTrades);
 
+	app.route('/trade')
+		.get(isLoggedIn, function (req, res) {
+			res.sendFile(path + '/public/trade.html');
+		});
+
 	// app.route('/books/db')
 	// 	.get(isLoggedIn, booksHandler.getAppts)
 	// 	.post(isLoggedIn, booksHandler.addMyBook)

@@ -162,7 +162,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				var pId = ("book-").concat(i);
 				var jone = jsonData[i];
 				//execute the HTML builder code
-				addElement(pId, resultsView, jone, optionsBF, cb);
+				addElement(pId, resultsView, jone, optionsBF, null); //cb);
 				//check node object for "count" flag
 				/*TODO: swap "count" for "ownership flags"
 				 if (jone.count > 0) {
@@ -172,10 +172,10 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					resultsView.insertBefore(lastChild, resultsView.childNodes[0]);
 				} */
 			}
-			// if(typeof cb == "function"){
-			// 	cb();
-			// 	console.log("fired function");
-			// }			
+			if(typeof cb == "function"){
+				cb();
+				console.log("fired function");
+			}			
 			/**
 			 * 
 			 * @param {String} divName 
@@ -263,22 +263,6 @@ var MYLIBRARY = MYLIBRARY || (function () {
 
 				//pass in parent, adds details for each
 				function detailer(parent, jsondata) {
-					/* 	let authors = document.createElement("li");
-						authors.id = "authors-details";
-						authors.innerHTML = ("Authors: " + jsondata.authors);
-
-						let isbn = document.createElement("li");
-						isbn.id = "isbn-details";
-						isbn.innerHTML = ("ISBN/ID: " + jsondata.isbn13);
-
-						let pages = document.createElement("li");
-						pages.id = "pages-details";
-						pages.innerHTML = ("Pages: " + jsondata.pages);
-
-						parent.appendChild(authors);
-						parent.appendChild(isbn);
-						parent.appendChild(pages);
-					*/
 
 					Object.keys(jsondata).map((val, ind, arr) => {
 						if (jsondata[val] !== null && val !== "json_string" && val !== "language" && val !== "image_url" && val !== "url"){
@@ -431,7 +415,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 						}//delAction
 					}//addControls fn
 					newWrapSup.className = newWrapSup.className + " " + options.classText;
-				}
+				}//options == not null
 
 				//append sup to DOCUMENT					
 				if (parent.hasChildNodes()) {
