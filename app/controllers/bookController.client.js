@@ -237,12 +237,14 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				newWrapSup.appendChild(newWrapInfo);
 
 				//"sup" wrap background image
-				var newWrapPic = document.createElement("a");
-				newWrapPic.href = (pollCopy["url"]);
-				newWrapPic.className = "poll-wrap-pic";
-				newWrapPic.setAttribute("style",
-					"background-image: url(" + pollCopy["image_url"] + ")");
-				newWrapSup.appendChild(newWrapPic);
+				if(pollCopy["image_url"]){
+					var newWrapPic = document.createElement("a");
+					newWrapPic.href = (pollCopy["url"]);
+					newWrapPic.className = "poll-wrap-pic";
+					newWrapPic.setAttribute("style",
+						"background-image: url(" + pollCopy["image_url"] + ")");
+					newWrapSup.appendChild(newWrapPic);
+				}//if image_url			
 
 				//divs: choice buttons
 				var contDiv = document.createElement("div");
@@ -414,6 +416,18 @@ var MYLIBRARY = MYLIBRARY || (function () {
 							}//alert box 
 						}//delAction
 					}//addControls fn
+
+					/** to add an event listener onclick for whole 'poll' element*/
+					if(options.linker){
+						addLinkFn(options.linker);
+					}
+					function addLinkFn(linkType){
+						if(linkType == "trade"){
+							newWrapSup.addEventListener("click", (thisWrap) => {
+								window.location = ("/trade?tradeID=" + polljone.id );
+							});
+						}
+					}
 					newWrapSup.className = newWrapSup.className + " " + options.classText;
 				}//options == not null
 

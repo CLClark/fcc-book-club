@@ -51,47 +51,49 @@
 	</div>
 
 	<div class="container club-profile">
-
-		<!-- <form id="tradefrm" action="/trade" method="post"> -->
-		<div id="tradefrm">
+		<div id="tradefrm">							
 			<div class="trades-wrap">
 				<div class=" description">ID: </div>
 				<div id="profile-id" class=" trades-value">10108368638468270</div>
-				<div id="userid-dummy" class=" formspace">
-					<input value="Update?" type="submit">
+				<div id="userid-dummy" class=" formspace">			
 					<!-- <input onclick="myFunction()" value="Update?" type="button"> -->
-				</div>
+				</div>			
+				<form id="tradefrm2" method="post" action="/trade">			
+					<input id="frmSub" value="Submit Trade?" type="submit"/>
+					<input name="requested" type="hidden" value="" id="reqinput"/>
+					<input name="proposed" type="hidden" value="" id="propinput"/>
+				</form>
 			</div>
 
-			<div id="books-trade" class="container">				
-
+			<div id="books-trade" class="container">
+				
 				<div id="left-book" class="trade">
-					<div class="poll-wrap-sup" id="wrap-null">
-						<div class="poll-wrap-info">
-							<div class="poll-title"></div>
-						</div>
-					</div>
 					<div class="trades-wrap">
 						<div class="description">Requested Book: </div>
-						<div id="profile-city" class="trade-value">Atlanta</div>
+						<div id="requested-title" class="trade-value">Atlanta</div>
 					</div>
 					<div class="formspace">
 						<input id="reqbook" class="trade-input" name="reqbook" placeholder="book you're requesting..." type="trade-text">
 					</div>
+					<div class="poll-wrap-sup" id="wrap-null">
+						<div class="poll-wrap-info">
+							<div-* class="poll-title"></div>
+						</div>
+					</div>
 				</div>
 
 				<div id="right-book" class="trade">
+					<div class="trades-wrap">
+						<div class="description">My Book for Trade: </div>
+						<div id="proposed-title" class="trade-value">Chris Clark</div>
+					</div>
+					<div class="formspace">
+						<input id="probook" class="trade-input" name="probook" placeholder="add your book... (optional)" type="trade-text">
+					</div>
 					<div class="poll-wrap-sup" id="wrap-null">
 						<div class="poll-wrap-info">
 							<div class="poll-title"></div>
 						</div>
-					</div>
-					<div class="trades-wrap">
-						<div class="description">My Book for Trade: </div>
-						<div id="my-book" class="trade-value">Chris Clark</div>
-					</div>
-					<div class="formspace">
-						<input id="probook" class="trade-input" name="probook" placeholder="add your book... (optional)" type="trade-text">
 					</div>
 				</div>
 
@@ -104,12 +106,12 @@
 					<input name="tstate" placeholder="status... action..." type="trade-text">
 				</div> -->
 			</div>
-			<!-- </form> -->
 		</div>
+			
 
 	</div>
 
-	<div id="profile-container" style="display: none">
+	<div id="trades-container" style="display: none">
 		<div id="trades-navi-wrap" class="trades-navi-wrap">
 			<div id="trades-text-wrap" class="trades-text-wrap">
 				<h3 id="trades-text" class="trades-text"></h3>
@@ -159,24 +161,24 @@
 			</div>
 			<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
 			<ul id="poll-view-request" class="poll-view-list"></ul>
-		</div>	
+		</div>
 		<!-- RIGHT Column (flex) moved to above book results-->
 		<div class="results-db">
-				<div id="results-navi-wrap" class="trades-navi-wrap">
-					<div id="results-text-wrap" class="trades-text-wrap">
-						<h3 id="results-text"></h3>
-					</div>
-					<div id="results-navi" class="btn trades-navi results-navi">
-						results placeholder
-						<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
-					</div>
-					<div id="results-navi-trade" class="btn trades-navi-trade results-navi">
-						results placeholder II
-					</div>
+			<div id="results-navi-wrap" class="trades-navi-wrap">
+				<div id="results-text-wrap" class="trades-text-wrap">
+					<h3 id="results-text"></h3>
 				</div>
-				<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
-				<ul id="poll-view" class="poll-view-list"></ul>
+				<div id="results-navi" class="btn trades-navi results-navi">
+					results placeholder
+					<!-- 	<img id="fresh-appts" src="public/img/refresh.png" alt="Reload my Trades" /> -->
+				</div>
+				<div id="results-navi-trade" class="btn trades-navi-trade results-navi">
+					results placeholder II
+				</div>
 			</div>
+			<!-- <img id="yourarea" src="public/img/yourarea.png" alt="Results" /> -->
+			<ul id="poll-view" class="poll-view-list"></ul>
+		</div>
 
 	</div>
 
@@ -197,12 +199,13 @@
 		//callback for authscript AUTHLIB.finale();
 		TRADES.myBookForm();
 		TRADES.reqBookForm();
+		TRADES.sufInit();
 		// let listenArr = [TRADES.tradeForm(),TRADES.reqForm()];
 		// Promise.all(listenArr).then((resolved) => {
 		// 	TRADES.resHandler();
 		// }).catch((e) => { console.log(e);			
 		// });
-		
+
 	</script>
 </footer>
 

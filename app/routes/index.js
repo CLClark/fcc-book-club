@@ -102,8 +102,7 @@ module.exports = function (app, passport) {
 		.get(isLoggedIn, booksHandler.allBooks);		
 
 	app.route('/club')
-		//no login required
-		// .get(isLoggedIn, booksHandler.ourBooks);		
+		//no login required		
 		.get(booksHandler.ourBooks)
 		//handle profile updates		
 		.post(isLoggedIn, urlencodedParser, function (req, res, next) {

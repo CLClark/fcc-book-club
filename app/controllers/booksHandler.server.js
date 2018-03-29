@@ -240,13 +240,24 @@ function BooksHandler() {
 							console.log("inside return isbn");
 							let book = value;
 							// try {
-								let bookTitle = book.title || book.volumeInfo.title;
-								let bookAuthors = book.authors || book.volumeInfo.authors;
-								let bookPublishedDate = book.publisheddate || book.volumeInfo["publishedDate"];
-								let bookPages = book.pages || book.volumeInfo.pageCount;
-								let bookImageUrl = book["image_url"] || book.volumeInfo.imageLinks.thumbnail;
-								let bookLanguage = book.language || book.volumeInfo.language;
-								let bookUrl = book.url || book.volumeInfo.infoLink;
+								//dummy object "volumeInfo" if it is not included in Google API response
+								let volDummy = book.volumeInfo || {
+									title: "not found",
+									authors: "not found",
+									pageCount: "not found",
+									imageLinks: "not found",
+									language: "not found",
+									infoLink: "not found"									
+								};
+								let bookTitle = book.title || volDummy.title;
+								let bookAuthors = book.authors || volDummy.authors;
+								let bookPublishedDate = book.publisheddate || volDummy["publishedDate"];
+								let bookPages = book.pages || volDummy.pageCount;
+								let imageLinks = volDummy.imageLinks || 
+									{ thumbnail:	"no thumbnail" };
+								let bookImageUrl = book["image_url"] || imageLinks.thumbnail;
+								let bookLanguage = book.language || volDummy.language;
+								let bookUrl = book.url || volDummy.infoLink;
 								let bookJson = JSON.stringify(book) || "";
 								let bookId = book.volume || book.id || null;
 								resolve({
@@ -383,10 +394,11 @@ function BooksHandler() {
 	}//bookBuilder2
 	/*********************** *****************************/
 	this.ourBooks = function (req, res) {
+		 //optional parameter "exclusion=user" to exclude "her own books" from results
 		console.log('handler.server.js.ourBooks');
 		var pool = new pg.Pool(config);
 
-		function queryMaker() {
+		function queryMaker(exclTest) {
 			return new Promise((resolve, reject) => {
 				const values = [];
 				var terms = req.query.terms;
@@ -397,27 +409,51 @@ function BooksHandler() {
 					console.log("terms found: " + req.query.terms);
 					let tsSplit = terms.split(/[ ,]+/);
 					tsQuery = tsSplit.join(" & ");
-					let text = returnText("tsv @@ to_tsquery($1) AND ");
-					// values.push(tsQuery);
-					resolve([text, [tsQuery]]);
-				}
+					let text = returnText("tsv @@ to_tsquery($2) AND ");
+					
+					let userId = req.user.id;
+					//exclude user?
+					if(exclTest == "user"){
+						resolve([text, [userId, tsQuery]]);
+					} else {
+						resolve([text, ["", tsQuery]]);
+					}					
+				}//if, search terms present
 				else {
-					//find all		
+				//find all	
 					let text = returnText("");
-					resolve([text, values]);
-				}
+					//exclude user?
+					let userCheck = req.user || false; //user logged in?
+					if(userCheck !== false){
+						let userId = req.user.id || "";
+						if(exclTest == "user"){
+							//user id for value [0]
+							resolve([text, [userId]]);						
+						} else {
+							//empty string for owner id (array[0])
+							resolve([text, ["dummy_id"]]);						
+						}//else, not excluding
+					//user is not logged in, then we can't exclude userid
+					}else {
+						//empty string for owner id (array[0])
+						resolve([text, ["dummy_id"]]);						
+					}//else, not excluding					
+				}//else, no search terms
 				function returnText(optQuery) {
-					//SELECT title, authors[1] FROM books WHERE tsv @@ to_tsquery($1);
-					let tmpText = 'SELECT title, authors, isbn13, publisheddate, image_url, language, url, active, pages ' +
-						' FROM public.books WHERE ' +
-						optQuery +
-						' NOT public.books.active = false';
-					return tmpText;
-				}
+					//SELECT title, authors[1] FROM books WHERE tsv @@ to_tsquery($2);
+					let tmpText = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
+					', ownership.id, ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
+					' FROM ownership INNER JOIN books ON ownership.bookid = books.volume WHERE '
+						+ optQuery +
+					' NOT ownership.active = false ';					
+					return tmpText.concat(" AND NOT ownership.owner = $1 ");					
+				}//returnText fn
 			});
 		}
+		//does user want "her own books" exluded?
+		var exclusion = req.query.exclude || false;
 
-		queryMaker().then((textArray) => {
+		queryMaker(exclusion).then((textArray) => {
 			var text = textArray[0];
 			// console.log(text);	
 			var values = textArray[1];
@@ -553,7 +589,7 @@ function BooksHandler() {
 			return new Promise((resolve, reject) => {
 				//query for only active "true" appointments
 				var text = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
-					', ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
+					', ownership.id, ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
 					' FROM ownership INNER JOIN books ON ownership.bookid = books.volume WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
 					'';
 				const values = [];

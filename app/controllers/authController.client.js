@@ -143,7 +143,7 @@ var AUTHLIB = AUTHLIB || (function () {
 				}, false);//event listener "click"
 			}//refresher if
 
-		},
+		}, //navi
 
 		finale: function () {
 			let tradesBtn = document.querySelector("#my-trades");
@@ -262,7 +262,7 @@ var AUTHLIB = AUTHLIB || (function () {
 					//if user is not authenticated
 					else {
 						//remove appts div "profile-container" because "not authed"
-						document.querySelector('#profile-container').remove();
+						// document.querySelector('#trades-container').remove();
 						if (authNode !== null) {
 							//add the facebook "sign in" button
 							authNode.replaceWith(makeDefaultDiv());
@@ -334,7 +334,7 @@ var AUTHLIB = AUTHLIB || (function () {
 						tradeNavi.addEventListener("click", hideButton.bind(tradeNavi), false);
 					}
 					function hideButton() {
-						var trades = document.querySelector("#trades-view");
+						let trades = document.querySelector("#trades-view");
 						if (trades !== null) {
 							if (this.innerHTML == "Show Trades") {
 								trades.setAttribute("style", "display: unset");
@@ -346,10 +346,23 @@ var AUTHLIB = AUTHLIB || (function () {
 								this.innerHTML = "Show Trades";
 							}
 						}
-					}//hideButton fn				
+					}//hideButton fn	
 
+					//add listener for new trade
+					let newTrade = document.querySelector("#trades-navi-trade");
+					if (newTrade !== null) {
+						newTrade.addEventListener("click", newTradeBtn.bind(newTrade), false);
+					}
+					function newTradeBtn(){
+						let nTrade = document.querySelector("#trades-navi-trade");
+						if (nTrade !== null) {
+							//navigate to trade page
+							window.location = "/trade";
+						}
+					}//newTradeBtn		
 					return newDiv;
 				}//makeMyTrades
+
 				//execute on btn click
 				function myBooksFn() {
 					tabColourer("my-books");
@@ -381,14 +394,16 @@ var AUTHLIB = AUTHLIB || (function () {
 						// console.log(window.location); //testing
 						//GUI notification
 						tabColourer("my-trades");
+						//hide the profile div
+	//TODO: add a "show button?" or show my clicking "my profile"?
+						document.querySelector("#profile-container").setAttribute("style", "display: none");
 						//Inform User, app is "loading..."
 						var tempText = document.querySelector("#trades-text");
 						//show the trades list...
 						if (document.querySelector("#trades-view").getAttribute("show-status") == "false") {
 							document.querySelector("#trades-navi").dispatchEvent(new MouseEvent("click"));
 						}
-						var proCon = document.querySelector("#profile-container") || null;
-
+						var proCon = document.querySelector("#trades-container") || null;
 						if (tempText !== null) {
 							tempText.innerHTML = "Loading...";
 							// loader(true); //toggle lock pic
@@ -398,7 +413,6 @@ var AUTHLIB = AUTHLIB || (function () {
 							if (tempText !== null) { tempText.innerHTML = "My Trades:"; }
 							console.log(data);
 							var tradesFound = JSON.parse(data);
-
 							renderTrades(tradesFound);
 						}));//ajax call	
 
@@ -413,11 +427,11 @@ var AUTHLIB = AUTHLIB || (function () {
 								proCon.setAttribute("style", "display: unset");
 								//third arg is div class //divCB is called within barFormer.addElement
 								tradeData.sort(function (a, b) {
-									let aTime = new Date(a.appt["date_proposed"]);
-									let bTime = new Date(b.appt["date_proposed"]);
+									let aTime = new Date(a["date_proposed"]);
+									let bTime = new Date(b["date_proposed"]);
 									return aTime.getTime() - bTime.getTime();
 								});
-								divCB(tradeData, "trades-view", { "classText": " trade" }, null);
+								divCB(tradeData, "trades-view", { "classText": " trade", linker : "trade" }, null);
 								// addDeleteDiv();						
 								// loader(false); //toggle lock pic
 							}
@@ -425,7 +439,7 @@ var AUTHLIB = AUTHLIB || (function () {
 							// let refreshIcon = document.querySelector('#fresh-appts')
 							// refreshIcon.className = refreshIcon.className.substring(0, (refreshIcon.className.length - 9));
 							/****** */
-							/* let profSpace = document.querySelector("#profile-container");
+							/* let profSpace = document.querySelector("#trades-container");
 								profSpace.setAttribute("style", "display: unset");
 								// let tradesList = document.querySelector("#trades-view");
 								// let holder = document.createElement("div");
