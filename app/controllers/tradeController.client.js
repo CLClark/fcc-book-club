@@ -241,6 +241,12 @@ var TRADES = TRADES || (function () {
 		},//resHandler
 
 		sufInit: function () {
+			// console.log(window.location); //testing
+			if(window.location.search == ""){
+				//new trade
+			} else{
+				document.querySelector("#tradefrm2").setAttribute("style","display: none");
+			}
 			/* //prevent default submit in form...
 			var formPrevent = document.querySelector("#tradefrm2");
 			formPrevent.addEventListener("submit", listenerNullifier);
@@ -257,20 +263,109 @@ var TRADES = TRADES || (function () {
 				formPrevent.dispatchEvent(subEv);
 			});		 
 			*/
-			//Code to do some code stuff or other or so... so... yeah.
-			if(true){ //testing
-				console.log(window.location);
-			}
-			let tradeId = window.location.search.split("=")[1];
-			if(tradeId.length == 36){
-				functionToQueryServerForTrade();
-				function functionToQueryServerForTrade(theTradeId){
-					//query trades with ID
-					//meta: add id option for server call
-					theTradeId;
-				}
-			}
 
+			//Code to do some code stuff or other or so... so... yeah.
+			let tradeId = window.location.search.split("=")[1];
+			if (tradeId.length == 36) {
+				//get the trade data from the id
+				queryServer(tradeId)
+					.then((foundTrade) => {
+
+						console.log(foundTrade);
+						var tradeStatus = foundTrade["status"];
+						var tradeIdSpace = document.querySelector("#trade-id");
+						if (tradeIdSpace !== null) {
+							tradeIdSpace.innerHTML = foundTrade["id"];
+						}
+						var tradeStat = document.querySelector("#trade-status");
+						if (tradeStat !== null){
+							tradeStat.innerHTML = tradeStatus;							
+						}
+						//handle trade status buttons
+						if(tradeStatus == "completed"){
+							//remove? any interaction buttons
+							// or do nothing
+						}
+						else if(tradeStatus == "proposed"){
+							//allow non-proposed party to "accept" (requested party / rec)
+							//allow all parties to edit
+							//trade > proposed
+						}
+						else if(tradeStatus == "accepted"){
+							//allow proposers to confirm:
+							//trade > completed
+						}
+						else if(tradeStatus == "rejected"){
+							//allow proposer to edit and repropose:
+							//trade > proposed
+						}						
+
+						var leftSpace = document.querySelector("#left-book > #wrap-null");
+						var rightSpace = document.querySelector("#right-book > #wrap-null");
+
+						//render the "left" book in the formspace (requested book)
+						if (leftSpace !== null) {	
+							renderSingle(foundTrade["pro_ownership"],"requested")
+							.then(() => {
+								if(rightSpace !== null){
+									renderSingle(foundTrade["rec_ownership"],"mine");
+								}
+							}).catch((e) => { console.log(e) });
+						} else if (rightSpace !==null){
+							renderSingle(foundTrade["rec_ownership"],"mine")
+							.catch((e) => { console.log(e) });
+						}
+
+						function renderSingle(ownId, tradeOrientation) {
+							return new Promise((resolve, reject) => {
+								let parentSpace;
+								let classString;
+								if (tradeOrientation == "requested") {
+									parentSpace = "left-book";
+									classString = " req-book-sup";
+								} else if (tradeOrientation == "mine") {
+									parentSpace = "right-book";
+									classString = " my-book-sup";
+								}
+								//exclude the user in query parameters (don't want user to request their own book)
+								let request = ('/club/?ownership=' + ownId);// + "&timeframe=" + timeFrame.toISOString());
+								ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, 7000, function (err, data, status) {
+									if (err) {
+										console.log("request error" + err)
+										reject(err);
+									} else {
+										// document.querySelector('#poll-view-request').innerHTML = "";
+										var booksFound = JSON.parse(data);
+										console.log(booksFound);
+										//functionCB(booksFound, parentSpace, { classText: classString }, null); //resultCB);
+										resolve(functionCB(booksFound, parentSpace, { classText: classString }, null));
+									}
+									/* 
+										//barFormer callback
+										functionCB(barsFound, 'poll-view', null, null);
+										passedInFunction();
+										//					formerCB();
+									*/
+								}));
+
+							});
+						}//renderSingle
+					})
+					.catch((e) => { console.log(e) });
+
+				function queryServer(theTradeId) {
+					return new Promise((resolve, reject) => {
+						//query server with trade id
+						ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', ('/my-trades?' + 'singleId=' + theTradeId), 8000, function (err, data, status) {
+							if(err){
+								reject(err);
+							}
+							var tradeFound = JSON.parse(data);
+							resolve(tradeFound[0]);
+						}));//ajax call							
+					});//prom
+				}//queryServer
+			}
 
 		}//sufInit
 

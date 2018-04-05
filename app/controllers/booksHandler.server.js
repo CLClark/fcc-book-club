@@ -403,9 +403,17 @@ function BooksHandler() {
 				const values = [];
 				var terms = req.query.terms;
 				var tsQuery;
-
-				//check if query has terms (or not = all results)
-				if (terms.length > 0 && terms.length < 50) {
+				//check if query has specific ownership id...
+				var ownershipOne = req.query.ownership;
+				if(ownershipOne && ownershipOne.length == 36){
+					console.log("finding single ownership volume..." + ownershipOne);
+					//find one	
+					let text = returnText(" ownership.id = $2 AND ");
+					//exclude user check not needed
+					resolve([text, ["dummy_id",ownershipOne]]);	
+				}				
+				//check if query has terms (or not = find all books)
+				else if (terms.length > 0 && terms.length < 50) {
 					console.log("terms found: " + req.query.terms);
 					let tsSplit = terms.split(/[ ,]+/);
 					tsQuery = tsSplit.join(" & ");
@@ -943,7 +951,7 @@ function BooksHandler() {
 
 		if (req.query.volume !== null && req.query.volume !== "undefined") {
 			//1 get the book ID
-			var volId = new String(req.query.volume).substring(0, 20) || null;
+			var volId = new String(req.query.volume).substring(0, 36) || null;
 			removeFromDB(volId)
 			.then(() => {
 				res.json({status: "Successful remove"});
@@ -964,11 +972,11 @@ function BooksHandler() {
 					'UPDATE public.ownership ' +
 					' SET active = false, date_removed = $3 ' +					
 					//  ' ON CONFLICT ("bookisbn")' +
-					' WHERE ownership.owner = $1 AND ownership.bookid = $2 RETURNING *';
+					' WHERE ownership.owner = $1 AND ownership.id = $2 RETURNING *';
 				const insertValues = [];
 				try {															
 					insertValues.push(userId); //owner/userid from authenticated user
-					insertValues.push(book); //book isbn... TODO: change to book UUID
+					insertValues.push(book); //book ownership uuid... 
 					let today = new Date(Date.now());			
 					insertValues.push(today.toISOString()); //dateAdded	
 				} catch (error) { console.log(error); }
@@ -997,9 +1005,24 @@ function BooksHandler() {
 	}//removeMyBook
 	/***************************************** */
 
+	//api call to "/my-trades"
 	this.myTrades = function (req, res) {
 		var pool = new pg.Pool(config);
-		function queryMaker() {
+		//adds the tradeId to the postgres query, to narrow the search.
+
+		function preQueryFilter(){
+			return new Promise((resolve, reject) => {
+				if(req.query.hasOwnProperty('singleId')){
+					//send the addendum text and the trade id String
+					let tradeString = req.query.singleId;
+					resolve([tradeString, ' AND ( trades.id = $2) ']); //reverse order to pop later
+				}
+				else{
+					resolve(false);
+				}
+			});
+		}
+		function queryMaker(prequelArray) {
 			return new Promise((resolve, reject) => {
 				//trades db columns: "id","proposer","receiver","status","active","date_proposed","date_responded","paired_trade","pro_ownership","rec_ownership"
 				/* var text = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
@@ -1034,82 +1057,119 @@ function BooksHandler() {
 						}, (text.concat(' AND _id NOT IN ('))
 						);
 						resolve([combNots.concat(')'), values]);
-				} */
-				// else {
-				//console.log(Array.isArray(req.query.appts) + " : is array check");
-				//no>return the text/values:
-				resolve([text, values]);
+					} 
+					// else {
+					//console.log(Array.isArray(req.query.appts) + " : is array check");
+					//no>return the text/values:
+				*/
+				if(prequelArray !== false){
+					//trade id given
+					resolve([(text.concat(prequelArray.pop())), values.concat(prequelArray)]);
+				} else {
+					//no trade id given
+					resolve([text, values]);
+				}
 				// }
 			});
 		}
 		//more code here
 
-		queryMaker().then((textArray) => {
-			var text = textArray[0];
-			// console.log(text);	
-			var values = textArray[1];
-			// console.log(values);
-			pool.connect()
-				.then(client => {
-					console.log('pg-connected: myTrades')
-					client.query(text, values, function (err, result) {
-						if (err) {
-							res.status(403);
-							console.log(err);
-							console.log("get appts error");
-							res.json({ tradesFound: "none" });
-						}
-						else {
-							let rc;
-							if (Array.isArray(result.rows)) {
-								rc = result.rowCount;
+		preQueryFilter().then((prequelResult) => {
+			//extract the single trade ID and supplement query text >
+			queryMaker(prequelResult).then((textArray) => {
+				var text = textArray[0];
+				// console.log(text);	
+				var values = textArray[1];
+				// console.log(values);
+				pool.connect()
+					.then(client => {
+						console.log('pg-connected: myTrades')
+						client.query(text, values, function (err, result) {
+							if (err) {
+								res.status(403);
+								console.log(err);
+								console.log("get appts error");
+								res.json({ tradesFound: "none" });
 							}
 							else {
-								rc = 0;
-							}
-							client.release();
-							if (rc == 0) {
-								res.status(200);
-								res.json({ tradesFound: "none" });
-							} else {
-								console.log(JSON.stringify(result));
-								res.json(result.rows);
-								/* bookBuilder(result.rows, false)
-									.then(builtBooks => {
-										console.log("built books: " + builtBooks);
-										res.json(builtBooks);
-									})
-									.catch(e => { console.log(e + "loopy Loop"); });
-								 */
-							}
-							/* const promiseSerial = funcs =>
-									funcs.reduce((promise, func) =>
-										promise.then(result => func().then(Array.prototype.concat.bind(result))),
-										Promise.resolve([])
+								let rc;
+								if (Array.isArray(result.rows)) {
+									rc = result.rowCount;
+								}
+								else {
+									rc = 0;
+								}
+								client.release();
+								if (rc == 0) {
+									res.status(200);
+									res.json({ tradesFound: "none" });
+								} else {
+									console.log(JSON.stringify(result));
+									res.json(result.rows);
+									/* bookBuilder(result.rows, false)
+										.then(builtBooks => {
+											console.log("built books: " + builtBooks);
+											res.json(builtBooks);
+										})
+										.catch(e => { console.log(e + "loopy Loop"); });
+									 */
+								}
+								/* const promiseSerial = funcs =>
+										funcs.reduce((promise, func) =>
+											promise.then(result => func().then(Array.prototype.concat.bind(result))),
+											Promise.resolve([])
+										);
+									// convert each url to a function that returns a promise
+									const funcs = result.rows.filter(rowCheck => rowCheck).map(
+										pgResp => () => yelpSingle(pgResp, null)
 									);
-								// convert each url to a function that returns a promise
-								const funcs = result.rows.filter(rowCheck => rowCheck).map(
-									pgResp => () => yelpSingle(pgResp, null)
-								);
-	
-								promiseSerial(funcs)
-									.then(promies => (bookBuilder(promies, true)))
-									.then(builtBooks => {
-										res.json(builtBooks);
-										// console.log("builtBarsVVVV");							
-									})
-									.catch(e => { console.log(e + "loopy Loop"); });
-							*/
-						}//else no error
-					});
-				})
-				.catch(err => console.error('error connecting', err.stack))
-				.then(() => pool.end());
+		
+									promiseSerial(funcs)
+										.then(promies => (bookBuilder(promies, true)))
+										.then(builtBooks => {
+											res.json(builtBooks);
+											// console.log("builtBarsVVVV");							
+										})
+										.catch(e => { console.log(e + "loopy Loop"); });
+								*/
+							}//else no error
+						});
+					})
+					.catch(err => console.error('error connecting', err.stack))
+					.then(() => pool.end());
+			});//queryMaker
+			
+		}).catch((e) => {
+			console.log(e);
 		});
-
 	}//myTrades
 	/***************************************** */
 
+	//for proposing a new trade
+	this.newTrade = function (req, res) {
+		let reqBook = req.body.requested.substring(0, 36);
+		let offeredBook = req.body.proposed.substring(0, 36);
+		console.log(reqBook + ":::" + offeredBook);
+		res.sendStatus(200);
+
+		/**
+		 * 1. check if reqBook is not owned by "user"
+		 * a. check if offeredBook is owned ...
+		 * 2. 
+		 * 3.
+		 * 4.
+		 * 5.
+		 * 6.
+		 * 7.
+		 * 
+		 */
+
+	}//newTrade
+
+	//for approving, rejecting, editing a trade
+	this.tradeResponse = function (req, res) {
+
+	}//tradeResponse
 
 	/**myBooks equivalent */	//search DB for book data that user owns//'GET' to /books/db	
 	this.getAppts = function (req, res) {

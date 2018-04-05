@@ -56,9 +56,12 @@ var MYLIBRARY = MYLIBRARY || (function () {
 							console.log("request error")
 						} else {
 							document.querySelector('#poll-view').innerHTML = "";
-							var booksFound = JSON.parse(data);
-							console.log(booksFound);
+							//results header text
+							let resultNote = document.querySelector("#results-text");
+							resultNote.innerHTML = "Our Books Results: ";
 
+							var booksFound = JSON.parse(data);							
+							console.log(booksFound);													
 							functionCB(booksFound, 'poll-view', null, null);
 						}
 						/* 
@@ -122,9 +125,12 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					var request = ('/books/?terms=' + searchValue);// + "&timeframe=" + timeFrame.toISOString());
 					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', request, 7000, function (err, data, status) {
 						document.querySelector('#poll-view').innerHTML = "";
+						//results header text
+						let resultNote = document.querySelector("#results-text");
+						resultNote.innerHTML = "Search Results: ";
+
 						var booksFound = JSON.parse(data);
 						console.log(booksFound);
-
 						functionCB(booksFound, 'poll-view', { controls: "add" }, null);
 					}));
 				};

@@ -54,7 +54,7 @@
 		<div id="tradefrm">							
 			<div class="trades-wrap">
 				<div class=" description">ID: </div>
-				<div id="profile-id" class=" trades-value">10108368638468270</div>
+				<div id="trade-id" class=" trades-value">...</div>
 				<div id="userid-dummy" class=" formspace">			
 					<!-- <input onclick="myFunction()" value="Update?" type="button"> -->
 				</div>			
@@ -190,6 +190,8 @@
 		AUTHLIB.navi();
 		AUTHLIB.authScript(false).then(() => {
 			AUTHLIB.finale();
+			//script for prefilling trade data
+			TRADES.sufInit();
 		}).catch((e) => {
 			console.log(e);
 		});
@@ -198,8 +200,7 @@
 		// MYLIBRARY.bookFinder();
 		//callback for authscript AUTHLIB.finale();
 		TRADES.myBookForm();
-		TRADES.reqBookForm();
-		TRADES.sufInit();
+		TRADES.reqBookForm();		
 		// let listenArr = [TRADES.tradeForm(),TRADES.reqForm()];
 		// Promise.all(listenArr).then((resolved) => {
 		// 	TRADES.resHandler();

@@ -152,7 +152,12 @@ var AUTHLIB = AUTHLIB || (function () {
 			if (window.location.search == "?trades" && tradesBtn !== null) {
 				tradesBtn.dispatchEvent(new MouseEvent("click"));
 			}
-		},
+			let searchOursBtn = document.querySelector("#search-club");			
+			//search our books
+			if (window.location.search == "?our-books" && searchOursBtn !== null) {
+				searchOursBtn.dispatchEvent(new MouseEvent("click"));
+			}
+		},//finale 
 
 		authScript: function (zipIt) {
 			return new Promise((resolve, reject) => {
@@ -393,10 +398,10 @@ var AUTHLIB = AUTHLIB || (function () {
 					} else {
 						// console.log(window.location); //testing
 						//GUI notification
-						tabColourer("my-trades");
+						tabColourer("my-trades");						
+						//TODO: add a "show button?" or show my clicking "my profile"?
 						//hide the profile div
-	//TODO: add a "show button?" or show my clicking "my profile"?
-						document.querySelector("#profile-container").setAttribute("style", "display: none");
+						// document.querySelector("#profile-container").setAttribute("style", "display: none");
 						//Inform User, app is "loading..."
 						var tempText = document.querySelector("#trades-text");
 						//show the trades list...
@@ -449,7 +454,7 @@ var AUTHLIB = AUTHLIB || (function () {
 								// let tempJson = JSON.parse(tO.toString());
 								divCB(tO, 'trades-view', {classText: "trade", controls: null}, null);	
 							*/
-						}
+						}//renderTrades
 					}
 				}//myTradesFn
 
@@ -474,15 +479,19 @@ var AUTHLIB = AUTHLIB || (function () {
 					});
 					//show our bar:
 					document.querySelector("#gipSearch").setAttribute("style", "display: unset");
-					//1. replace search bar with "google api search"
-					//2. add google search
-					//3. form results with listeners(or hrefs) = > server handle add books
-					// ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
-					//1. declare results div			
-					//3. display books as results
-					//4. display corollary divs+functions (delete, add, etc)
-					// process(data);
-					// }));//ajax call				
+					//TODO: clear search results					
+					resultsReset("#poll-view", "Add Your New Book: ")
+			
+				}
+				function resultsReset(resultsSelector, resultsTitle){
+					let place = document.querySelector(resultsSelector);
+					if(place !== null){
+						place.innerHTML = "";
+					}
+					let resultNote = document.querySelector("#results-text");
+					if(resultNote !== null){
+						resultNote.innerHTML = resultsTitle;
+					}		
 				}
 				function makeSearchClub() {
 					let newDiv = document.createElement("div");
@@ -497,15 +506,24 @@ var AUTHLIB = AUTHLIB || (function () {
 				}//makeSearchClub
 
 				function searchClub() {
-					tabColourer("search-club");
-					//hide all unused bars:
-					let allBars = document.querySelectorAll(".sbar");
-					allBars.forEach((searchBar) => {
-						searchBar.setAttribute("style", "display: none");
-					});
-					//show our bar:
-					document.querySelector("#zipSearch").setAttribute("style", "display: unset");
-				}
+					// console.log(window.location); //testing
+					if(window.location.pathname !== "/" && window.location.search !== "?our-books"){
+						//redirect to home page
+						// console.log(window.location.pathname); //testing
+						window.location = "/?our-books";
+					} else {
+						tabColourer("search-club");
+						//hide all unused bars:
+						let allBars = document.querySelectorAll(".sbar");
+						allBars.forEach((searchBar) => {
+							searchBar.setAttribute("style", "display: none");
+						});
+						//show our bar:
+						document.querySelector("#zipSearch").setAttribute("style", "display: unset");
+						//reset Results Area:
+						resultsReset("#poll-view", "Our Books Results: ")
+					}					
+				}//searchClub
 
 				/**			 
 				 * @param {String} addText 

@@ -84,6 +84,7 @@ header a ~ p {
 	border-width: 1px;
 	border-style: none none dashed none;
 	margin-bottom: 6px;
+	min-height: 100px;
 }
 
 #navi{
