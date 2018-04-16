@@ -88,5 +88,9 @@ var ajaxFunctions = {
 		};
 		xmlhttp.open(method, url);
 		xmlhttp.send();
+	},
+
+	ajaxPost: function ajaxPost(){
+		
 	}
 };

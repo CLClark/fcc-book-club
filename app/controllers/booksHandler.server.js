@@ -593,42 +593,27 @@ function BooksHandler() {
 	/***************************************** */
 	this.myBooks = function (req, res) {
 		var pool = new pg.Pool(config);
+		let limiterText;
+		if(req.query.exclude = "untradable"){
+			limiterText = ' AND NOT ownership.tradeable = false';
+		} else {
+			limiterText = '';
+		}
 		function queryMaker() {
 			return new Promise((resolve, reject) => {
 				//query for only active "true" appointments
 				var text = 'SELECT books.title, books.volume, books.authors, books.isbn13, books.publisheddate, books.image_url, books.language, books.url, books.active, books.pages' +
 					', ownership.id, ownership.bookid, ownership.owner, ownership.active, ownership.date_added, ownership.date_removed ' +
 					' FROM ownership INNER JOIN books ON ownership.bookid = books.volume WHERE ownership.owner = $1 AND NOT ownership.active = false ' +
-					'';
+					limiterText;
 				const values = [];
 				var uid = req.user.id;
 				values.push(uid);
 
-				//check if query has any appts
-				/* 	if (req.query.hasOwnProperty('appts') && Array.isArray(req.query.appts)) {
-						//yes> add each appt and text to the arrays
-						console.log(Array.isArray(req.query.appts) + " : is array check");
-						let cap = req.query.appts.length - 1;
-						var combNots = req.query.appts.reduce(function (acc, cVal, cInd, array) {
-							values.push(cVal);
-							if (cInd < cap) {
-								return acc.concat(('$' + (2 + cInd) + ', '));
-							}
-							else {
-								return acc.concat(('$' + (2 + cInd)));
-							}
-						}, (text.concat(' AND _id NOT IN ('))
-						);
-						resolve([combNots.concat(')'), values]);
-				} */
-				// else {
-				//console.log(Array.isArray(req.query.appts) + " : is array check");
-				//no>return the text/values:
 				resolve([text, values]);
-				// }
 			});
 		}
-		//more code here
+		//more code here?
 
 		queryMaker().then((textArray) => {
 			var text = textArray[0];
@@ -1150,25 +1135,236 @@ function BooksHandler() {
 		let reqBook = req.body.requested.substring(0, 36);
 		let offeredBook = req.body.proposed.substring(0, 36);
 		console.log(reqBook + ":::" + offeredBook);
-		res.sendStatus(200);
 
-		/**
-		 * 1. check if reqBook is not owned by "user"
-		 * a. check if offeredBook is owned ...
-		 * 2. 
-		 * 3.
-		 * 4.
-		 * 5.
-		 * 6.
-		 * 7.
-		 * 
-		 */
+		function checkTradeable(rBook, oBook) {
+			return new Promise((resolve, reject) => {
+				//query pgadmin?
+				var pool = new pg.Pool(config);
+				function queryMaker() {
+					return new Promise((resolve, reject) => {
+						//query for only active "true" appointments
+						var text = 'SELECT * FROM ownership WHERE ownership.id = $1 OR ownership.id = $2 AND NOT active = false';
+						const values = [rBook, oBook];
+						// var uid = req.user.id;
+						// values.push(uid);	
+
+						resolve([text, values]);
+					});
+				}
+				queryMaker().then((textArray) => {
+					var text = textArray[0];
+					// console.log(text);	
+					var values = textArray[1];
+					// console.log(values);
+					pool.connect()
+						.then(client => {
+							// console.log('pg-connected: getAppts')
+							client.query(text, values, function (err, result) {
+								client.release();
+								if (err) {
+									reject(false);
+									// res.status(403);
+									// console.log(err);
+									// console.log("check tradeable error");
+									// res.json({ trade: "error - untradeable" });
+								}
+								let rc = result.rowCount;
+								if (rc == 0) {
+									reject(false);									
+									// res.status(200);
+									// res.json({ trade: "no trades found" });
+								} else {
+									console.log(result.rows);
+									let untradeable = result.rows.filter(
+										(checking) =>  checking["tradeable"] == true	);
+									console.log("tradeable found: " + untradeable.length);
+									if (untradeable.length == 2) {
+										resolve(untradeable);
+									} else {
+										reject(untradeable);
+									}
+								} //else
+							});
+						})
+						.catch(err => console.error('error connecting', err.stack))
+						.then(() => pool.end());
+				})
+					.catch(err => console.error('error check tradeable', err.stack))
+			});
+
+		}//checkTradeable function
+
+		checkTradeable(reqBook, offeredBook)
+		.then((tradeable) => {
+			if(tradeable == false){
+				//rejected?
+				res.sendStatus(404);
+			}
+			if(tradeable.length < 2){
+				console.log("untradeable result");
+				//respond to client request
+				res.status(200); //TODO: change code to error
+				res.json({ trade: "untradeable"});
+			} else {
+				console.log("tradeable result");
+				//function to insert the trade
+				console.log(tradeable);
+				let passReq = tradeable.filter((each) => 
+					each.id == reqBook	
+				);
+				let passOffe = tradeable.filter((each) => 
+					each.id == offeredBook	
+				);
+				//insert into TRADES table
+				updateTrade(req, passReq[0], passOffe[0], true)
+				.then( (tradeResult) => {
+					//update ownership "tradeable" property for "requester's own proposed book"
+					updateTradeables([tradeResult.proId], false);	//make it untradeable
+				})
+				.catch((e) => {	console.log(e); });
+				// insertNewTrade(req, );	
+			}
+		})
+		.catch((e) => { console.log(e);});					
 
 	}//newTrade
 
+	// function updateTrade(req, bookData, change) {
+	function updateTrade(req, requestedOwn, proposedOwn, change) {
+		return new Promise((resolve, reject) => {
+			var insertText;
+			const insertValues = [];
+			let userid = req.user.id;
+			let active; //to activate or deactivate the trade (false or true)
+			if (change == true) {
+				//add operation
+				active = change;
+				insertText =
+					//id is generated by postgres; "dateRemoved" not used
+					'INSERT INTO public.trades (' +
+						'"proposer","receiver",' +
+						'"status", "active",' +
+						'"date_proposed",' +
+						// '"date_responded",' +	//not used					
+						// '"paired_trade",' + //not used (yet)
+						' "pro_ownership", "rec_ownership") ' +
+					'VALUES($1, $2, $3, $4, $5, $6, $7) ' +
+					'RETURNING *';
+				// 'ON CONFLICT (owner,bookisbn) DO NOTHING'
+			} else if (change == false) {
+				//remove operation
+				active = change;
+				insertText =
+					//id is generated by postgres; "dateAdded" not used
+					'INSERT INTO public.trades (' +
+					'"proposer","receiver",' +
+					'"status", "active",' +
+					'"date_proposed", "date_responded",' +
+					'"paired_trade", "pro_ownership", "rec_ownership") ' +
+				'VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) ' +
+				'RETURNING *';
+				// 'ON CONFLICT (owner,bookisbn) DO NOTHING RETURNING (bookisbn)'; 
+			}
+			if (userid !== null && userid !== undefined) {
+				try {
+					let today = new Date(Date.now());
+					insertValues.push(proposedOwn.owner); //proposer id
+					insertValues.push(requestedOwn.owner); //requester id
+					insertValues.push("PROPOSED"); //status
+					insertValues.push(active); //active
+					insertValues.push(today.toISOString()); //date_proposed
+					// insertValues.push(0); //date_responded
+					// insertValues.push(); //paired_trade
+					insertValues.push(proposedOwn.id); //pro_ownership
+					insertValues.push(requestedOwn.id); //rec_ownership
+					function pushSafe(content) {
+						if (content !== null) { return content; } else { return "null"; }
+					}//pushSafe
+				} catch (error) { console.log("ownership try err: " + error); }
+				//new postgresql connection
+				var exPool = new pg.Pool(config);
+				exPool.connect()
+					.then(client2 => {
+						// console.log('pg-connected2');
+						client2.query(insertText, insertValues, function (err, result) {
+							client2.release();
+							if (err) {
+								console.log("ownership query err: " + err); reject(err);
+							} else {
+								console.log("ownership result: " + JSON.stringify(result));
+								resolve({ 
+									proId: proposedOwn.id, 
+									reqId: requestedOwn.id, 
+									dbResult: result.rows
+								});
+
+							}//else
+						});//client.query
+					})
+					.then(() => { exPool.end(); })
+					.catch(err => console.error('error connectingZ', err.stack))
+				//end pool in parent function					
+			}
+		});//promise return
+	}//updateTrade
+
+	//this function takes an ownership array and changes it's tradeable property (boolean)
+	function updateTradeables(ownerships, tradeBool) {		
+		//access postgres db
+		return new Promise((resolve, reject) => {
+			//check ownerships length (insert dummy if needed)
+			let ownArray;
+			if(ownerships.length < 2){
+				ownerships.push("12345678-1234-1234-1234-123456789123"); //dummy id
+				ownArray = ownerships;
+			} else {
+				ownArray = ownerships;
+			}
+			const insertText =
+				// 'INSERT INTO public.ownership ("owner","bookid","date_added","date_removed","active") ' +
+				// 'VALUES($1, $2, $3, $4, $5, $6) ' 
+				'UPDATE public.ownership ' +
+				' SET tradeable = $3 ' +
+				//  ' ON CONFLICT ("bookisbn")' +
+				' WHERE ownership.id = $1 OR ownership.id = $2 RETURNING *';
+			const insertValues = [];
+			try {
+				insertValues.push(ownArray[0]); //first changed id
+				insertValues.push(ownArray[1]); //second changed id				
+				insertValues.push(tradeBool); //tradeable, true or false
+			} catch (error) { console.log(error); }
+
+			console.log(insertText)
+			console.log(insertValues)
+			//new postgresql connection
+			var poolz3 = new pg.Pool(config);
+			poolz3.connect()
+				.then(client2 => {
+					// console.log('pg-connected2');
+					client2.query(insertText, insertValues, function (err, result) {
+						client2.release();
+						if (err) {
+							console.log("REJECTED" + err); reject(err);
+						} else {
+							console.log("updateTradeables result: " + JSON.stringify(result));
+							resolve(result.rows);
+						}//else
+					});//client.query
+				})
+				.catch(err => console.error('error connecting2', err.stack))
+				.then(() => poolz3.end());
+		});
+
+	}//updateTradeables
+
 	//for approving, rejecting, editing a trade
 	this.tradeResponse = function (req, res) {
-
+		//accept or reject
+		let tId = req.query.trade; //trade id from client
+		let tAct = req.query.action; //trade action (type) from client
+		console.log(tId + "   " + tAct);
+		res.sendStatus(200);
+		
 	}//tradeResponse
 
 	/**myBooks equivalent */	//search DB for book data that user owns//'GET' to /books/db	
@@ -1481,9 +1677,6 @@ function BooksHandler() {
 		console.log('deleteAppt callback');
 
 	}//this.deleteBar
-
-
-
 
 	/***search data for user profile + bars	
 		this.myBars = function (req, res) {

@@ -125,7 +125,14 @@ module.exports = function (app, passport) {
 		.post(isLoggedIn, urlencodedParser, function (req, res, next) {
 			if (!req.body) return res.sendStatus(400);
 			return next();
-		      }, booksHandler.newTrade);
+		}, booksHandler.newTrade);
+
+	app.route('/trade-response')
+		//accept or reject a trade...
+		.post(isLoggedIn, urlencodedParser, function (req, res, next) {
+			if (!req.body) return res.sendStatus(400);
+			return next();
+		}, booksHandler.tradeResponse);
 
 	// app.route('/books/db')
 	// 	.get(isLoggedIn, booksHandler.getAppts)

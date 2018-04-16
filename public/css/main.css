@@ -211,12 +211,14 @@ header a ~ p {
 .trades-navi-trade:not(:hover), #trades-navi-trade:not(:hover){ /* new trade button*/
 	background-color: #ee2838bf
 }
+.trades-navi-trade-new:not(:hover), #trades-navi-trade-new:not(:hover){ /* new trade button*/
+	background-color: green;
+}
 .trades-navi-wrap{
 	display: flex;
 	  flex-direction: row;
 	  justify-content: space-between;
 }
-
 .trades-text-wrap{
 	margin: auto 0 auto 0;
 /* 	flex: .2; */
