@@ -1366,7 +1366,8 @@ function BooksHandler() {
 		res.sendStatus(200);
 
 		// 1. check action
-		
+		// check user.id to the ownership record (receiver or proposer?)
+		//	<Postgres Call>
 		/** A. on ACCEPT
 			0. Check user = receiver user id
 		 	1. UPDATE (trade id) "ACCEPTED" + "ACC_DATE"
