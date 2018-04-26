@@ -1229,7 +1229,7 @@ function BooksHandler() {
 
 	}//newTrade
 
-	// function updateTrade(req, bookData, change) {
+	// to insert a new trade = query maker + DB call
 	function updateTrade(req, requestedOwn, proposedOwn, change) {
 		return new Promise((resolve, reject) => {
 			var insertText;
@@ -1271,7 +1271,7 @@ function BooksHandler() {
 					insertValues.push(proposedOwn.owner); //proposer id
 					insertValues.push(requestedOwn.owner); //requester id
 					insertValues.push("PROPOSED"); //status
-					insertValues.push(active); //active
+					insertValues.push(active); //active					
 					insertValues.push(today.toISOString()); //date_proposed
 					// insertValues.push(0); //date_responded
 					// insertValues.push(); //paired_trade
@@ -1363,8 +1363,70 @@ function BooksHandler() {
 		let tId = req.query.trade; //trade id from client
 		let tAct = req.query.action; //trade action (type) from client
 		console.log(tId + "   " + tAct);
-		res.sendStatus(200);
+		// res.sendStatus(200);
 
+		if (tAct.toLowerCase() == "accept" || tAct.toLowerCase() == "reject") {
+			//check if user is the trade receiver...		
+			//user is trade receiver> Yes...
+			updatePublicDotTrades(req.user.id, tId, tAct.toUpperCase())
+				.then(() => {
+					res.sendStatus(200);
+				})
+				.catch((e) => { 
+					res.sendStatus(404); console.log(e);
+				});
+			// 1. UPDATE each ownership.owner and ownership "tradeable" (to yes)
+			// 2. Then, UPDATE  trades "status" etc. to "ACCEPTED"
+			//user is not trade receiver>
+			//TODO: error out			
+		}
+		/* } else if (tAct.toLowerCase() == "reject") {
+			//check if user is the trade receiver...
+			//yes>
+			//no>
+		} else if (tAct.toLowerCase() == "cancel") {
+			//check if user is the trade proposer...
+			//yes>
+			//no>
+		} */
+		//[query maker] and [db caller] for public.trades
+		function updatePublicDotTrades(usersId, tradesId, statusString) {
+			return new Promise((resolve, reject) => {
+				const insertText =
+					'UPDATE public.trades ' +
+					' SET status = $3, date_responded = $4 ' +
+					//  ' ON CONFLICT ("bookisbn")' +
+					' WHERE trades.id = $1 AND ( proposer = $2 OR receiver = $2 ) ' +
+					' RETURNING *';
+				const insertValues = [];
+				try {
+					let today = new Date(Date.now());					
+					insertValues.push(tradesId); //passed in trades id
+					insertValues.push(usersId); //req.user.id or (passed in)
+					insertValues.push(statusString); //ACCEPT, REJECT (or CANCELED?)
+					insertValues.push(today.toISOString()); //date_responded
+				} catch (error) { console.log(error); }
+				console.log(insertText)
+				console.log(insertValues)
+				//new postgresql connection
+				var poolz3 = new pg.Pool(config);
+				poolz3.connect()
+					.then(client2 => {
+						// console.log('pg-connected2');
+						client2.query(insertText, insertValues, function (err, result) {
+							client2.release();
+							if (err) {
+								console.log("REJECTED" + err); reject(err);
+							} else {
+								console.log("updatePublicDotTrades result: " + JSON.stringify(result.rows[0]));
+								resolve(result.rows);
+							}//else
+						});//client.query
+					})
+					.catch(err => console.error('error connecting publicDotTrades', err.stack))
+					.then(() => poolz3.end());
+			});//promise return
+		}	
 		// 1. check action
 		// check user.id to the ownership record (receiver or proposer?)
 		//	<Postgres Call>
