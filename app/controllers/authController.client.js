@@ -331,6 +331,7 @@ var AUTHLIB = AUTHLIB || (function () {
 					//href not used, event listener instead
 					// aPro1.href = "/my-trades";
 					aPro1.innerHTML = "My Trades";
+					aPro1.href = "/profile?trades";
 					newDiv.appendChild(aPro1);
 
 					//add listener for profile page
@@ -371,6 +372,15 @@ var AUTHLIB = AUTHLIB || (function () {
 				//execute on btn click
 				function myBooksFn() {
 					tabColourer("my-books");
+					//GUI : hide trades
+					if(window.location.pathname == '/profile'){
+						console.log(window.location);
+						let tradesShown = document.querySelector("#trades-view");
+						if(tradesShown !== null){
+							// tradesShown.setAttribute("style","display: none");
+							document.querySelector("#trades-navi").dispatchEvent(new MouseEvent("click"));
+						}
+					}//pathname == trades					
 					//2. query node for user books
 					ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-books', 8000, function (err, data, status) {
 						var booksFound = JSON.parse(data);
@@ -416,7 +426,7 @@ var AUTHLIB = AUTHLIB || (function () {
 						//query server
 						ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', '/my-trades', 8000, function (err, data, status) {
 							if (tempText !== null) { tempText.innerHTML = "My Trades:"; }
-							console.log(data);
+							// console.log(data);
 							var tradesFound = JSON.parse(data);
 							renderTrades(tradesFound);
 						}));//ajax call	

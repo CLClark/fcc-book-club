@@ -259,6 +259,8 @@ var TRADES = TRADES || (function () {
 					else {
 						//handle successful  response
 						console.log(data);
+						//reload the trade page...
+						location.reload();
 					}//else
 				}));//ajaxRequest
 			}//acceptIt

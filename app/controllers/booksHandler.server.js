@@ -1089,7 +1089,7 @@ function BooksHandler() {
 									res.status(200);
 									res.json({ tradesFound: "none" });
 								} else {
-									console.log(JSON.stringify(result));
+									console.log("trades found: " + JSON.stringify(result.rows.size));
 									res.json(result.rows);
 									/* bookBuilder(result.rows, false)
 										.then(builtBooks => {
@@ -1344,7 +1344,7 @@ function BooksHandler() {
 					client2.query(insertText, insertValues, function (err, result) {
 						client2.release();
 						if (err) {
-							console.log("REJECTED" + err); reject(err);
+							console.log("REJECTED " + err); reject(err);
 						} else {
 							console.log("updateTradeables result: " + JSON.stringify(result));
 							resolve(result.rows);
@@ -1354,22 +1354,74 @@ function BooksHandler() {
 				.catch(err => console.error('error connecting2', err.stack))
 				.then(() => poolz3.end());
 		});
-
 	}//updateTradeables
+
+	//simple update for the owner column
+	function updateOwner(newOwner, ownershipId){
+		return new Promise((resolve, reject) => {
+			const insertText =			
+				'UPDATE public.ownership ' +
+				' SET tradeable = $3, owner = $1 ' +
+				//  ' ON CONFLICT ("bookisbn")' +
+				' WHERE ownership.id = $2 ' +
+				' RETURNING *';
+			const insertValues = [];
+			try {
+				insertValues.push(newOwner); //new owner id
+				insertValues.push(ownershipId); //ownership id
+				insertValues.push(true); //tradeable, true or false
+			} catch (error) { console.log(error); }
+			console.log(insertText)
+			console.log(insertValues)
+			//new postgresql connection
+			var poolz3 = new pg.Pool(config);
+			poolz3.connect()
+				.then(client2 => {
+					// console.log('pg-connected2');
+					client2.query(insertText, insertValues, function (err, result) {
+						client2.release();
+						if (err) {
+							console.log("REJECTED" + err); reject(err);
+						} else {
+							console.log("updateOwner result: " + JSON.stringify(result.rows));
+							resolve(result.rows);
+						}//else
+					});//client.query
+				})
+				.catch(err => console.error('error connecting update owner', err.stack))
+				.then(() => poolz3.end());
+		}); //promise
+	}//updateOwner
 
 	//for approving, rejecting, editing a trade
 	this.tradeResponse = function (req, res) {
 		//accept or reject
 		let tId = req.query.trade; //trade id from client
 		let tAct = req.query.action; //trade action (type) from client
-		console.log(tId + "   " + tAct);
-		// res.sendStatus(200);
+		console.log(tId + "   " + tAct);		
 
-		if (tAct.toLowerCase() == "accept" || tAct.toLowerCase() == "reject") {
+		if (tAct.toLowerCase() == "accept" ) {
 			//check if user is the trade receiver...		
 			//user is trade receiver> Yes...
-			updatePublicDotTrades(req.user.id, tId, tAct.toUpperCase())
-				.then(() => {
+			updatePublicDotTrades(req.user.id, tId, "ACCEPTED")
+				.then((upResult) => {
+					//update proposer to receiver ownership
+					updateOwner(upResult[0]["proposer"], upResult[0]["rec_ownership"])
+						.then(() => {
+							//if needed?
+							//update receiver to proposer ownership	
+							return updateOwner(upResult[0]["receiver"], upResult[0]["pro_ownership"]);
+						})
+						.catch((e) => {
+							console.log(e);
+							//reverse process if error occurred
+							updateOwner(upResult[0]["proposer"], upResult[0]["pro_ownership"])
+								.then(() => {
+									return updateOwner(upResult[0]["proposer"], upResult[0]["rec_ownership"]);
+								}).catch((e) => {
+									console.log("error on reverse owner update::: " + e);
+								});
+						}); //set tradeable, swap owners
 					res.sendStatus(200);
 				})
 				.catch((e) => { 
@@ -1378,17 +1430,39 @@ function BooksHandler() {
 			// 1. UPDATE each ownership.owner and ownership "tradeable" (to yes)
 			// 2. Then, UPDATE  trades "status" etc. to "ACCEPTED"
 			//user is not trade receiver>
-			//TODO: error out			
-		}
-		/* } else if (tAct.toLowerCase() == "reject") {
+			//TODO: error out					
+		} else if (tAct.toLowerCase() == "reject") {
+			updatePublicDotTrades(req.user.id, tId, "REJECTED")
+				.then((dbResponse) => {
+					//set the books back to "tradeable"
+					return updateTradeables(dbResponse[0]["rec_ownership"], true)
+						.then(() => {
+							return updateTradeables(dbResponse[0]["pro_ownership"], true);
+						});
+					res.sendStatus(200);
+				})
+				.catch((e) => { 
+					res.sendStatus(404); console.log(e);
+				});
 			//check if user is the trade receiver...
 			//yes>
 			//no>
 		} else if (tAct.toLowerCase() == "cancel") {
-			//check if user is the trade proposer...
-			//yes>
-			//no>
-		} */
+			//UPDATE trades table
+			updatePublicDotTrades(req.user.id, tId, "CANCELED")
+				.then((dbResponse) => {
+					//set the books back to "tradeable"
+					return updateTradeables([dbResponse[0]["rec_ownership"]], true)
+						.then(() => {
+							return updateTradeables([dbResponse[0]["pro_ownership"]], true);
+						});
+					res.sendStatus(200);
+				})
+				.catch((e) => {
+					res.sendStatus(404); console.log(e);
+				}); //updatePublic... call
+		}//action is "cancel"
+
 		//[query maker] and [db caller] for public.trades
 		function updatePublicDotTrades(usersId, tradesId, statusString) {
 			return new Promise((resolve, reject) => {
