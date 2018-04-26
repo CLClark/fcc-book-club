@@ -1364,7 +1364,22 @@ function BooksHandler() {
 		let tAct = req.query.action; //trade action (type) from client
 		console.log(tId + "   " + tAct);
 		res.sendStatus(200);
+
+		// 1. check action
 		
+		/** A. on ACCEPT
+			0. Check user = receiver user id
+		 	1. UPDATE (trade id) "ACCEPTED" + "ACC_DATE"
+			2. UPDATE (ownership) "owner ID" [for both books]
+		 */
+
+		/** B. on REJECT or CANCEL?
+		 	0. Check user = receiver user id
+			1. UPDATE (trades) "REJECTED" + "REJ_DATE"
+		*/
+
+		// C. edit TODO
+
 	}//tradeResponse
 
 	/**myBooks equivalent */	//search DB for book data that user owns//'GET' to /books/db	

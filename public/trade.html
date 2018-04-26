@@ -48,45 +48,54 @@
 				tick' tock'
 			</h3>
 		</div> -->
-	</div>
-
-	<div class="container club-profile">
-		<div id="tradefrm">							
+	</div><div class="container club-profile">
+		<div id="tradefrm">
 			<div class="trades-wrap">
 				<div class=" description">ID: </div>
 				<div id="trade-id" class=" trades-value">...</div>
-				<div id="userid-dummy" class=" formspace">			
+				<div id="userid-dummy" class=" formspace">
 					<!-- <input onclick="myFunction()" value="Update?" type="button"> -->
-				</div>			
-				<form id="tradefrm2" method="post" action="/trade">			
+				</div>
+				<form id="tradefrm2" method="post" action="/trade">
 					<input id="frmSub" value="Submit Trade?" type="submit"/>
 					<input name="requested" type="hidden" value="" id="reqinput"/>
 					<input name="proposed" type="hidden" value="" id="propinput"/>
 				</form>
 			</div>
+			
+			<div class="trades-wrap">
+					<div class=" description">Trade Status: </div>
+					<div id="trade-status" class="trade-value">STATUS OF TRADE HERE</div>
+			</div>
 
-			<div id="books-trade" class="container">
+			<div id="books-trade" class="container">				
 				
-				<div id="left-book" class="trade">
+				<div id="left-space">
 					<div class="trades-wrap">
-						<div class="description">Requested Book: </div>
-						<div id="requested-title" class="trade-value">Atlanta</div>
+							<div class="description">Requested Book: </div>
+							<div id="requested-title" class="trade-value"></div>
 					</div>
+				</div>
+
+				<div id="left-book" class="trade">					
 					<div class="formspace">
 						<input id="reqbook" class="trade-input" name="reqbook" placeholder="search for the book you want..." type="trade-text">
 					</div>
 					<div class="poll-wrap-sup" id="wrap-null">
 						<div class="poll-wrap-info">
-							<div-* class="poll-title"></div>
+							<div class="poll-title"></div>
 						</div>
 					</div>
 				</div>
 
-				<div id="right-book" class="trade">
+				<div id="right-space">
 					<div class="trades-wrap">
 						<div class="description">My Book for Trade: </div>
-						<div id="proposed-title" class="trade-value">Chris Clark</div>
+						<div id="proposed-title" class="trade-value"></div>
 					</div>
+				</div>
+
+				<div id="right-book" class="trade">					
 					<div class="formspace">
 						<input id="probook" class="trade-input" name="probook" placeholder="search for your book to trade... (optional)" type="trade-text">
 					</div>
@@ -99,13 +108,7 @@
 
 			</div>
 
-			<div class="trades-wrap">
-				<div class=" description">Trade Status: </div>
-				<div id="trade-status" class="trade-value">STATUS OF TRADE HERE</div>
-				<!-- <div class=" formspace">
-					<input name="tstate" placeholder="status... action..." type="trade-text">
-				</div> -->
-			</div>
+		
 		</div>
 			
 
