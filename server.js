@@ -44,10 +44,11 @@ routes(app, passport);
 const server = http.createServer(app);
 
 var port;
-if(process.env.LOCAL == false){
-	port = '/tmp/nginx.socket';
+if(process.env.LOCAL == true){
+	port = 8080;	
 }else{
-	port = 8080;}
+	port = '/tmp/nginx.socket';
+}
 
 server.listen(port, function () {
 	console.log('Node.js listening on port ' + port + '...');
