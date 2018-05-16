@@ -161,6 +161,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 					resultsView.removeChild(resultsView.firstChild);
 				}
 			}
+
 			if (jsonData == null) { return; }
 			//loop through json array, call HTML builder
 			for (var i = 0; i < jsonData.length; i++) {
@@ -202,16 +203,18 @@ var MYLIBRARY = MYLIBRARY || (function () {
 				// wrapper for title, [optional count], and "poll-wrap"
 				var newWrapInfo = document.createElement("div");
 				newWrapInfo.className = "poll-wrap-info";
-
-				//object-title div
-				var titleDiv = document.createElement("div");
-				titleDiv.className = "poll-title";
-				var titleA = document.createElement("a");
-				titleA.className = "poll-title";
-				titleA.innerHTML = polljone.title;
-				// titleA.href = (pollCopy["url"]);				
-				titleDiv.appendChild(titleA);
-
+				
+				//check if title exists JSON data
+				if(polljone.title){
+					//object-title div
+					var titleDiv = document.createElement("div");
+					titleDiv.className = "poll-title";
+					var titleA = document.createElement("a");
+					titleA.className = "poll-title";
+					titleA.innerHTML = polljone.title;								
+					titleDiv.appendChild(titleA);
+					newWrapInfo.appendChild(titleDiv);
+				}				
 				/*	var addlink = '/my-books?isbn=' + polljone.isbn13;
 					titleDiv.setAttribute("addlink",addlink);				
 					titleDiv.addEventListener("click", addmine.bind(titleDiv), false);
@@ -223,8 +226,7 @@ var MYLIBRARY = MYLIBRARY || (function () {
 								console.log(data);
 							}
 						}));					
-				} */
-				newWrapInfo.appendChild(titleDiv);
+				} */				
 
 				//polljone.count div 
 				var countDiv = document.createElement("div");

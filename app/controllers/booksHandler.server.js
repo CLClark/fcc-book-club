@@ -651,24 +651,6 @@ function BooksHandler() {
 									})
 									.catch(e => { console.log(e + "loopy Loop"); });
 							}
-							/* const promiseSerial = funcs =>
-									funcs.reduce((promise, func) =>
-										promise.then(result => func().then(Array.prototype.concat.bind(result))),
-										Promise.resolve([])
-									);
-								// convert each url to a function that returns a promise
-								const funcs = result.rows.filter(rowCheck => rowCheck).map(
-									pgResp => () => yelpSingle(pgResp, null)
-								);
-	
-								promiseSerial(funcs)
-									.then(promies => (bookBuilder(promies, true)))
-									.then(builtBooks => {
-										res.json(builtBooks);
-										// console.log("builtBarsVVVV");							
-									})
-									.catch(e => { console.log(e + "loopy Loop"); });
-							*/
 						}//else no error
 					});
 				})
@@ -1090,6 +1072,7 @@ function BooksHandler() {
 									res.json({ tradesFound: "none" });
 								} else {
 									console.log("trades found: " + JSON.stringify(result.rows.size));
+
 									res.json(result.rows);
 									/* bookBuilder(result.rows, false)
 										.then(builtBooks => {

@@ -253,7 +253,7 @@ header a ~ p {
 	flex-direction: row;
 	border-bottom: gray thin dotted;
 	margin: 10px 10px;
-	justify-content: space-between;
+	/* justify-content: space-between; */
 	white-space: nowrap;
 }
 .trade{
@@ -652,7 +652,7 @@ span {
 }
 
 .poll-title{
-	padding: 5px 0 10px 5px;
+	padding: 5px 0 5px 5px;
 	/* font-size: x-large; */
 	font-weight: bold;
 	color: #FFA000;
@@ -688,7 +688,7 @@ ul.poll-view-list, #profile-container{
 
 .poll-view-list-poll{
 	/* overflow: hidden; */
-	padding: 0 5px 0 10px;
+	padding: 10px 5px 0 10px;
 	list-style: none;
 	flex: 1;
 	display: flex;
